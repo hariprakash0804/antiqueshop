@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: #08080c;
+  color: #f3f4f6;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0d0d12;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
+}
+
+/* Glassmorphism class */
+.glass-panel {
+  background: rgba(18, 18, 23, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-panel-neon-gold {
+  background: rgba(18, 18, 23, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+}
+
+.glass-panel-neon-cyan {
+  background: rgba(18, 18, 23, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+}
+
+/* Animated scanning lines (cyberpunk detail) */
+.cyber-grid {
+  background-image: 
+    linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+/* Neon glow animations */
+@keyframes pulse-gold {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+    border-color: rgba(212, 175, 55, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.5);
+    border-color: rgba(212, 175, 55, 0.5);
+  }
+}
+
+.pulse-gold-glow {
+  animation: pulse-gold 3s infinite ease-in-out;
+}
+
+@keyframes pulse-cyan {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    border-color: rgba(0, 240, 255, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
+    border-color: rgba(0, 240, 255, 0.5);
+  }
+}
+
+.pulse-cyan-glow {
+  animation: pulse-cyan 3s infinite ease-in-out;
+}
+
+/* Scanning scanline overlay */
+.scanline {
+  width: 100%;
+  height: 100px;
+  background: linear-gradient(
+    0deg,
+    rgba(212, 175, 55, 0) 0%,
+    rgba(212, 175, 55, 0.04) 10%,
+    rgba(212, 175, 55, 0) 100%
+  );
+  position: absolute;
+  left: 0;
+  top: -100px;
+  animation: scan 6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes scan {
+  0% {
+    top: -100px;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+/* Hologram flicker effect */
+@keyframes flicker {
+  0% { opacity: 0.97; }
+  5% { opacity: 0.93; }
+  10% { opacity: 0.98; }
+  15% { opacity: 0.95; }
+  20% { opacity: 0.98; }
+  25% { opacity: 0.93; }
+  30% { opacity: 0.99; }
+  100% { opacity: 0.98; }
+}
+
+.holo-flicker {
+  animation: flicker 0.15s infinite;
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
