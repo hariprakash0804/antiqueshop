@@ -19,6 +19,9 @@ const couponRoutes = require('./routes/couponRoutes');
 
 const app = express();
 
+// Trust proxy headers (X-Forwarded-For) in deployed environments (e.g. Render/Vercel)
+app.set('trust proxy', true);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -26,13 +29,14 @@ app.use(express.json());
 // Rate limiting for auth endpoints
 let authAttempts = {};
 const rateLimiter = (req, res, next) => {
-  const ip = req.ip;
+  // Resolve original client IP behind reverse proxies/load balancers
+  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.ip;
   const now = Date.now();
   if (!authAttempts[ip]) authAttempts[ip] = [];
   // Remove entries older than 15 minutes
   authAttempts[ip] = authAttempts[ip].filter(t => now - t < 900000);
-  if (authAttempts[ip].length >= 20) {
-    return res.status(429).json({ message: 'Too many requests. Please try again later.' });
+  if (authAttempts[ip].length >= 100) {
+    return res.status(429).json({ message: 'Too many authentication attempts. Please try again in 15 minutes.' });
   }
   authAttempts[ip].push(now);
   next();
