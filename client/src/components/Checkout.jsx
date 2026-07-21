@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useToast } from './Toast';
 import { API_BASE } from '../config';
 
-export function Checkout({ user, cartItems, onPaymentSuccess, setView, onUpdateQuantity, onRemoveItem }) {
+export function Checkout({ user, cartItems, onPaymentSuccess, setView, onUpdateQuantity, onRemoveItem, taxRate = 18 }) {
   const toast = useToast();
   const [address, setAddress] = useState(user?.address || '');
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,9 @@ export function Checkout({ user, cartItems, onPaymentSuccess, setView, onUpdateQ
     return 0;
   };
 
-  const finalTotal = Math.max(subtotal - discountAmount + getShippingFee(), 0);
+  const taxableAmount = Math.max(subtotal - discountAmount + getShippingFee(), 0);
+  const taxAmount = (taxableAmount * taxRate) / 100;
+  const finalTotal = taxableAmount + taxAmount;
 
   const handleApplyCoupon = async (e) => {
     e.preventDefault();
@@ -69,6 +71,9 @@ export function Checkout({ user, cartItems, onPaymentSuccess, setView, onUpdateQ
             quantity: item.quantity,
             price: item.price
           })),
+          subtotalAmount: subtotal,
+          taxAmount: taxAmount,
+          discountAmount: discountAmount,
           totalAmount: finalTotal,
           shippingAddress: `[TRANSIT: ${shippingMethod.toUpperCase()}] ${address}`
         })
@@ -394,8 +399,8 @@ export function Checkout({ user, cartItems, onPaymentSuccess, setView, onUpdateQ
             <span className="text-cyber-cyan">+₹{getShippingFee().toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-zinc-550 uppercase">CRYPTO EXCISE TAX (0%):</span>
-            <span className="text-white">₹0.00</span>
+            <span className="text-zinc-555 uppercase">CRYPTO EXCISE TAX ({taxRate}%):</span>
+            <span className="text-white">₹{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
           <div className="flex justify-between text-sm font-display font-bold text-cyber-gold pt-3 border-t border-zinc-900">
             <span>TOTAL VALUE TRANSFERRED:</span>

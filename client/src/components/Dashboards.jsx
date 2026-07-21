@@ -29,11 +29,54 @@ function InvoiceModal({ order, onClose }) {
   };
 
   const invoiceSubtotal = order.items.reduce((sum, item) => sum + parseFloat(item.price) * item.quantity, 0);
-  const discount = Math.max(invoiceSubtotal - parseFloat(order.totalAmount), 0);
+  const subtotal = order.subtotalAmount !== undefined ? parseFloat(order.subtotalAmount) : invoiceSubtotal;
+  const discount = order.discountAmount !== undefined ? parseFloat(order.discountAmount) : Math.max(invoiceSubtotal - parseFloat(order.totalAmount), 0);
+  const tax = order.taxAmount !== undefined ? parseFloat(order.taxAmount) : 0;
+  const shipping = Math.max(parseFloat(order.totalAmount) - subtotal + discount - tax, 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in print:bg-white print:p-0">
-      <div className="relative w-full max-w-xl glass-panel border border-cyber-gold/45 rounded-3xl p-8 space-y-6 pulse-gold-glow print:border-0 print:shadow-none print:w-full print:max-w-none print:h-full print:bg-white print:text-black">
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          html, body {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: 100% !important;
+            overflow: hidden !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          /* Hide everything under the body except our print container */
+          body > * {
+            visibility: hidden !important;
+          }
+          /* Reveal only print container */
+          .print-modal-container, .print-modal-container * {
+            visibility: visible !important;
+          }
+          .print-modal-container {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 40px !important;
+            box-sizing: border-box !important;
+            background: white !important;
+            color: black !important;
+            border: none !important;
+            box-shadow: none !important;
+            z-index: 9999999 !important;
+          }
+          #print-area, #print-area * {
+            visibility: visible !important;
+          }
+        }
+      `}} />
+      <div className="relative w-full max-w-xl glass-panel border border-cyber-gold/45 rounded-3xl p-8 space-y-6 pulse-gold-glow print-modal-container print:border-0 print:shadow-none print:w-full print:max-w-none print:h-full print:bg-white print:text-black">
         {/* Printable Section wrapper */}
         <div id="print-area" className="space-y-6 print:text-black font-mono">
           {/* Header */}
@@ -84,17 +127,29 @@ function InvoiceModal({ order, onClose }) {
           <div className="space-y-1.5 text-xs text-right font-mono">
             <div className="flex justify-between">
               <span className="text-zinc-500">SUBTOTAL VALUATION:</span>
-              <span className="text-white print:text-black">₹{invoiceSubtotal.toLocaleString()}</span>
+              <span className="text-white print:text-black">₹{parseFloat(subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
-            {discount > 0 && (
+            {parseFloat(discount) > 0 && (
               <div className="flex justify-between text-cyber-cyan print:text-black">
                 <span>SYSTEM PROMO REBATE:</span>
-                <span>-₹{discount.toLocaleString()}</span>
+                <span>-₹{parseFloat(discount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              </div>
+            )}
+            {parseFloat(shipping) > 0 && (
+              <div className="flex justify-between text-cyber-cyan print:text-black">
+                <span>TRANSIT FEE:</span>
+                <span>+₹{parseFloat(shipping).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              </div>
+            )}
+            {parseFloat(tax) > 0 && (
+              <div className="flex justify-between text-gray-400 print:text-black">
+                <span>EXCISE TAX:</span>
+                <span>+₹{parseFloat(tax).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
             )}
             <div className="flex justify-between text-sm font-bold text-cyber-gold pt-2 border-t border-zinc-900/50 print:border-black print:text-black">
               <span>TOTAL VALUE TRANSFERRED:</span>
-              <span>₹{parseFloat(order.totalAmount).toLocaleString()}</span>
+              <span>₹{parseFloat(order.totalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
 
@@ -1242,12 +1297,36 @@ export function AdminDashboard({ user }) {
   const [stats, setStats] = useState(null);
   const [coupons, setCoupons] = useState([]);
   const [roleRequests, setRoleRequests] = useState([]);
+  const [taxRateSetting, setTaxRateSetting] = useState(18);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
 
   useEffect(() => {
     fetchAdminData();
   }, []);
+
+  const handleUpdateTaxRate = async (newRate) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/tax-rate`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({ taxRate: parseFloat(newRate) })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTaxRateSetting(data.taxRate);
+        toast.success(`SYSTEM EXCISE TAX RATE UPDATED: ${data.taxRate}%`);
+      } else {
+        toast.error(data.message || 'Failed to update excise tax rate.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to communicate with settings portal.');
+    }
+  };
 
   const fetchAdminData = async () => {
     setLoading(true);
@@ -1281,6 +1360,14 @@ export function AdminDashboard({ user }) {
         setCoupons(couponData || []);
       } else {
         toast.error('Failed to retrieve coupon registry.');
+      }
+
+      const taxRateRes = await fetch(`${API_BASE}/api/auth/tax-rate`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
+      if (taxRateRes.ok) {
+        const taxRateData = await taxRateRes.json();
+        setTaxRateSetting(parseFloat(taxRateData.taxRate));
       }
 
       const requestRes = await fetch(`${API_BASE}/api/admin/role-requests`, {
@@ -1758,6 +1845,50 @@ export function AdminDashboard({ user }) {
                 className="px-5 py-3 bg-cyber-gold hover:bg-yellow-650 text-black font-display font-extrabold text-[10px] tracking-widest rounded-xl transition-all"
               >
                 GENERATE PROMO
+              </button>
+            </form>
+          </div>
+
+          {/* Platform Settings Panel (Tax Configuration) */}
+          <div className="p-6 rounded-3xl bg-zinc-950/60 border border-zinc-900 space-y-4">
+            <div className="text-xs font-display text-cyber-gold tracking-widest font-bold uppercase">
+              ✦ PLATFORM VALUE SETTINGS (TAX CONFIGURATION) ✦
+            </div>
+            <p className="text-[10px] font-mono text-zinc-500 max-w-2xl leading-relaxed">
+              Configure the default global Crypto Excise Tax rate applied to all subtotal calculations during client checkouts.
+            </p>
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                const newRate = parseFloat(e.target.elements.taxRate.value);
+                if (isNaN(newRate) || newRate < 0 || newRate > 100) {
+                  toast.error('Tax rate must be a valid number between 0 and 100.');
+                  return;
+                }
+                handleUpdateTaxRate(newRate);
+              }}
+              className="flex flex-col sm:flex-row gap-3 pt-2 items-center max-w-md"
+            >
+              <div className="relative flex-1 w-full">
+                <input 
+                  key={taxRateSetting}
+                  name="taxRate" 
+                  type="number" 
+                  step="0.01" 
+                  min="0" 
+                  max="100" 
+                  defaultValue={taxRateSetting} 
+                  required
+                  placeholder="EXCISE TAX RATE %..."
+                  className="w-full bg-black border border-zinc-800 text-xs font-mono rounded-xl p-3 focus:outline-none placeholder-zinc-500 text-white pr-8"
+                />
+                <span className="absolute right-3 top-3 text-xs font-mono text-zinc-500">%</span>
+              </div>
+              <button 
+                type="submit"
+                className="w-full sm:w-auto px-5 py-3 bg-cyber-cyan hover:bg-cyan-600 text-black font-display font-extrabold text-[10px] tracking-widest rounded-xl transition-all"
+              >
+                UPDATE TAX PROTOCOL
               </button>
             </form>
           </div>

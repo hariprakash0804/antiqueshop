@@ -26,9 +26,32 @@ function App() {
   const [authOpen, setAuthOpen] = useState(false);
   const [commsOpen, setCommsOpen] = useState(false);
   const [wishlistIds, setWishlistIds] = useState(new Set());
+  const [taxRate, setTaxRate] = useState(18); // Default to 18% GST
   const toast = useToast();
 
+  useEffect(() => {
+    if (user && user.token) {
+      fetchTaxRate(user.token);
+    } else {
+      setTaxRate(18);
+    }
+  }, [user]);
 
+  const fetchTaxRate = async (token) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/tax-rate`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.taxRate !== undefined) {
+          setTaxRate(parseFloat(data.taxRate));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch tax rate:', err);
+    }
+  };
 
   const fetchWishlistIds = async (token) => {
     try {
@@ -182,6 +205,7 @@ function App() {
             setView={setView}
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveItem={handleRemoveItem}
+            taxRate={taxRate}
           />
         )}
 
@@ -225,6 +249,7 @@ function App() {
         cartItems={cart}
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
+        taxRate={taxRate}
         onCheckout={handleCheckoutInitiation}
       />
 

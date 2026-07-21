@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const mysql = require('mysql2/promise');
 const sequelize = require('../config/db');
-const { User, Product, Review, Wishlist, Coupon } = require('../models');
+const { User, Product, Review, Wishlist, Coupon, Setting } = require('../models');
 
 const seedDatabase = async () => {
   try {
@@ -167,6 +167,10 @@ const seedDatabase = async () => {
       { code: 'ANCIENT10', discount: 10 }
     ]);
     console.log('Default coupons seeded.');
+
+    // Seed default settings
+    await Setting.create({ key: 'tax_rate', value: '18' });
+    console.log('Default settings seeded (tax_rate: 18%).');
 
     process.exit(0);
   } catch (error) {

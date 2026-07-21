@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function Cart({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem, onCheckout }) {
+export function Cart({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem, taxRate = 18, onCheckout }) {
   if (!isOpen) return null;
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -124,13 +124,15 @@ export function Cart({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveIte
                   <span className="text-white">₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">TRANSACTION TAX (0%):</span>
-                  <span className="text-white">₹0.00</span>
+                  <span className="text-gray-500">TRANSACTION TAX ({taxRate}%):</span>
+                  <span className="text-white">
+                    ₹{((subtotal * taxRate) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm pt-2 border-t border-zinc-900">
                   <span className="font-display text-cyber-cyan tracking-wider">TOTAL INVOICE:</span>
                   <span className="font-display font-bold text-cyber-gold">
-                    ₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    ₹{(subtotal + (subtotal * taxRate) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>

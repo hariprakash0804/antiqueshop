@@ -6,6 +6,7 @@ const Review = require('./Review');
 const Wishlist = require('./Wishlist');
 const Coupon = require('./Coupon');
 const RoleRequest = require('./RoleRequest');
+const Setting = require('./Setting');
 
 // ── User ↔ Product (Seller relationship) ──
 User.hasMany(Product, { foreignKey: 'sellerId', as: 'products', onDelete: 'CASCADE' });
@@ -51,5 +52,6 @@ module.exports = {
   Review,
   Wishlist,
   Coupon,
-  RoleRequest
+  RoleRequest,
+  Setting
 };

@@ -215,3 +215,16 @@ exports.getMyRoleRequests = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+const Setting = require('../models/Setting');
+
+exports.getTaxRate = async (req, res) => {
+  try {
+    const setting = await Setting.findOne({ where: { key: 'tax_rate' } });
+    const taxRate = setting ? parseFloat(setting.value) : 18.0;
+    res.json({ taxRate });
+  } catch (error) {
+    console.error('Fetch tax rate error:', error);
+    res.json({ taxRate: 18.0 });
+  }
+};

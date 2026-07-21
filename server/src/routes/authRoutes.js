@@ -8,7 +8,8 @@ const {
   changePassword, 
   logoutUser,
   createRoleRequest,
-  getMyRoleRequests
+  getMyRoleRequests,
+  getTaxRate
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -21,5 +22,6 @@ router.put('/profile/password', protect, changePassword);
 
 router.post('/role-request', protect, createRoleRequest);
 router.get('/role-request', protect, getMyRoleRequests);
+router.get('/tax-rate', protect, getTaxRate);
 
 module.exports = router;

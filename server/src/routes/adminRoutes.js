@@ -10,7 +10,8 @@ const {
   createCoupon, 
   deleteCoupon,
   getRoleRequests,
-  resolveRoleRequest
+  resolveRoleRequest,
+  updateTaxRate
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -29,5 +30,7 @@ router.delete('/coupons/:code', deleteCoupon);
 
 router.get('/role-requests', getRoleRequests);
 router.put('/role-requests/:id/resolve', resolveRoleRequest);
+
+router.put('/tax-rate', updateTaxRate);
 
 module.exports = router;

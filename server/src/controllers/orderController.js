@@ -1,7 +1,7 @@
 const { Order, OrderItem, Product, User } = require('../models');
 
 exports.createOrder = async (req, res) => {
-  const { items, totalAmount, shippingAddress } = req.body;
+  const { items, subtotalAmount, taxAmount, discountAmount, totalAmount, shippingAddress } = req.body;
 
   if (!items || items.length === 0) {
     return res.status(400).json({ message: 'No items in order' });
@@ -22,6 +22,9 @@ exports.createOrder = async (req, res) => {
     // Create the Order in Pending status
     const order = await Order.create({
       userId: req.user.id,
+      subtotalAmount: subtotalAmount || 0,
+      taxAmount: taxAmount || 0,
+      discountAmount: discountAmount || 0,
       totalAmount,
       shippingAddress,
       status: 'Pending'
@@ -40,7 +43,18 @@ exports.createOrder = async (req, res) => {
     await Promise.all(orderItemPromises);
 
     const fullOrder = await Order.findByPk(order.id, {
-      include: [{ model: OrderItem, as: 'items' }]
+      include: [
+        {
+          model: User,
+          as: 'customer',
+          attributes: ['id', 'name', 'email']
+        },
+        {
+          model: OrderItem,
+          as: 'items',
+          include: [{ model: Product, as: 'product' }]
+        }
+      ]
     });
 
     res.status(201).json(fullOrder);
@@ -118,6 +132,11 @@ exports.getOrders = async (req, res) => {
         where: { userId: req.user.id },
         include: [
           {
+            model: User,
+            as: 'customer',
+            attributes: ['id', 'name', 'email']
+          },
+          {
             model: OrderItem,
             as: 'items',
             include: [{ model: Product, as: 'product' }]
@@ -146,6 +165,16 @@ exports.updateOrderStatus = async (req, res) => {
     const order = await Order.findByPk(req.params.id);
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Rule: once an order status is changed to delivered, it cannot be changed to any other status
+    if (order.status === 'Delivered') {
+      return res.status(400).json({ message: 'Delivered orders are finalized and cannot be shifted to any other state.' });
+    }
+
+    // Rule: when cancelled, the status can be changed only to refunded
+    if (order.status === 'Cancelled' && status !== 'Refunded') {
+      return res.status(400).json({ message: 'Cancelled orders can only transition to Refunded.' });
     }
 
     // Checking authorizations

@@ -15,6 +15,21 @@ const Order = sequelize.define('Order', {
       key: 'id'
     }
   },
+  subtotalAmount: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+    defaultValue: 0.00
+  },
+  taxAmount: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+    defaultValue: 0.00
+  },
+  discountAmount: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+    defaultValue: 0.00
+  },
   totalAmount: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false

@@ -1,6 +1,8 @@
 const { User, Order, Product, OrderItem, Review, Coupon } = require('../models');
 const { Op } = require('sequelize');
 const sequelize = require('../config/db');
+const RoleRequest = require('../models/RoleRequest');
+const Setting = require('../models/Setting');
 
 exports.getUsers = async (req, res) => {
   try {
@@ -250,8 +252,6 @@ exports.deleteCoupon = async (req, res) => {
   }
 };
 
-const RoleRequest = require('../models/RoleRequest');
-
 exports.getRoleRequests = async (req, res) => {
   try {
     const requests = await RoleRequest.findAll({
@@ -300,6 +300,27 @@ exports.resolveRoleRequest = async (req, res) => {
     res.json({ message: `Role upgrade request successfully ${status}`, request });
   } catch (error) {
     console.error('Resolve role request error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.updateTaxRate = async (req, res) => {
+  const { taxRate } = req.body;
+  
+  if (taxRate === undefined || isNaN(taxRate) || taxRate < 0 || taxRate > 100) {
+    return res.status(400).json({ message: 'Invalid tax rate value. Must be between 0 and 100.' });
+  }
+
+  try {
+    let setting = await Setting.findOne({ where: { key: 'tax_rate' } });
+    if (setting) {
+      await setting.update({ value: taxRate.toString() });
+    } else {
+      setting = await Setting.create({ key: 'tax_rate', value: taxRate.toString() });
+    }
+    res.json({ message: 'Tax rate updated successfully', taxRate: parseFloat(taxRate) });
+  } catch (error) {
+    console.error('Update tax rate error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
