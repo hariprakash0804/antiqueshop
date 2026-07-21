@@ -621,6 +621,16 @@ export function Catalog({ onAddToCart, user }) {
             {/* Modal Image & Switcher */}
             <div className="h-[350px] md:h-full bg-black relative flex flex-col justify-between">
               <div className="flex-1 w-full relative overflow-hidden bg-black/25">
+                {/* Wishlist Heart on modal image */}
+                <button 
+                  onClick={(e) => { e.stopPropagation(); toggleWishlist(selectedProduct.id); }}
+                  className="absolute top-4 left-4 z-10 w-9 h-9 flex items-center justify-center rounded-xl bg-black/60 border border-zinc-800 hover:border-cyber-gold hover:text-cyber-gold transition-all duration-300"
+                  title={wishlistIds.has(selectedProduct.id) ? "Remove from Wishlist" : "Add to Wishlist"}
+                >
+                  <span className={`text-base leading-none ${wishlistIds.has(selectedProduct.id) ? 'text-red-500 font-bold' : 'text-gray-400 hover:text-cyber-gold'}`}>
+                    {wishlistIds.has(selectedProduct.id) ? '♥' : '♡'}
+                  </span>
+                </button>
                 <img 
                   src={modalImages[activeImgIndex] || 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=400'} 
                   alt={selectedProduct.title}
