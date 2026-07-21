@@ -249,3 +249,57 @@ exports.deleteCoupon = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+const RoleRequest = require('../models/RoleRequest');
+
+exports.getRoleRequests = async (req, res) => {
+  try {
+    const requests = await RoleRequest.findAll({
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'name', 'email', 'role'] }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+    res.json(requests);
+  } catch (error) {
+    console.error('Fetch all role requests error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.resolveRoleRequest = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body; // 'approved' or 'rejected'
+
+  if (!['approved', 'rejected'].includes(status)) {
+    return res.status(400).json({ message: 'Invalid resolution status' });
+  }
+
+  try {
+    const request = await RoleRequest.findByPk(id, {
+      include: [{ model: User, as: 'user' }]
+    });
+
+    if (!request) {
+      return res.status(404).json({ message: 'Role request not found' });
+    }
+
+    if (request.status !== 'pending') {
+      return res.status(400).json({ message: 'This request has already been resolved' });
+    }
+
+    // Update request status
+    await request.update({ status });
+
+    // If approved, update user role
+    if (status === 'approved' && request.user) {
+      await request.user.update({ role: request.requestedRole });
+      console.log(`[ORBITAL COMMONS] Approved role upgrade request for ${request.user.email} to ${request.requestedRole.toUpperCase()}`);
+    }
+
+    res.json({ message: `Role upgrade request successfully ${status}`, request });
+  } catch (error) {
+    console.error('Resolve role request error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

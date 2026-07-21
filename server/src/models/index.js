@@ -5,6 +5,7 @@ const OrderItem = require('./OrderItem');
 const Review = require('./Review');
 const Wishlist = require('./Wishlist');
 const Coupon = require('./Coupon');
+const RoleRequest = require('./RoleRequest');
 
 // ── User ↔ Product (Seller relationship) ──
 User.hasMany(Product, { foreignKey: 'sellerId', as: 'products', onDelete: 'CASCADE' });
@@ -38,6 +39,10 @@ Wishlist.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 Product.hasMany(Wishlist, { foreignKey: 'productId', as: 'wishlistedBy', onDelete: 'CASCADE' });
 Wishlist.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 
+// ── User ↔ RoleRequest ──
+User.hasMany(RoleRequest, { foreignKey: 'userId', as: 'roleRequests', onDelete: 'CASCADE' });
+RoleRequest.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 module.exports = {
   User,
   Product,
@@ -45,5 +50,6 @@ module.exports = {
   OrderItem,
   Review,
   Wishlist,
-  Coupon
+  Coupon,
+  RoleRequest
 };

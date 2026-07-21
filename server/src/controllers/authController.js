@@ -19,15 +19,13 @@ exports.registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Default to 'customer' if role is not supplied or invalid
-    const validRoles = ['customer', 'seller', 'order_manager', 'admin'];
-    const selectedRole = validRoles.includes(role) ? role : 'customer';
-
+    // All registrations are strictly defaulted to 'customer'
+    // To obtain other roles, the operator must submit a request to the Admin
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      role: selectedRole
+      role: 'customer'
     });
 
     res.status(201).json({
@@ -162,6 +160,58 @@ exports.logoutUser = async (req, res) => {
     }
   } catch (error) {
     console.error('Logout error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+const RoleRequest = require('../models/RoleRequest');
+
+exports.createRoleRequest = async (req, res) => {
+  const { requestedRole, reason } = req.body;
+  if (!['seller', 'order_manager'].includes(requestedRole)) {
+    return res.status(400).json({ message: 'Invalid role requested' });
+  }
+  if (!reason || reason.trim().length < 5) {
+    return res.status(400).json({ message: 'A valid explanation (minimum 5 characters) is required' });
+  }
+
+  try {
+    // Check if there is already a pending request for the same role
+    const existingPending = await RoleRequest.findOne({
+      where: {
+        userId: req.user.id,
+        requestedRole,
+        status: 'pending'
+      }
+    });
+
+    if (existingPending) {
+      return res.status(400).json({ message: `A pending upgrade request for ${requestedRole.toUpperCase()} already exists.` });
+    }
+
+    const roleRequest = await RoleRequest.create({
+      userId: req.user.id,
+      requestedRole,
+      reason: reason.trim(),
+      status: 'pending'
+    });
+
+    res.status(201).json(roleRequest);
+  } catch (error) {
+    console.error('Create role request error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getMyRoleRequests = async (req, res) => {
+  try {
+    const requests = await RoleRequest.findAll({
+      where: { userId: req.user.id },
+      order: [['createdAt', 'DESC']]
+    });
+    res.json(requests);
+  } catch (error) {
+    console.error('Fetch my role requests error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

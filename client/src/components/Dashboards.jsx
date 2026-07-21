@@ -1241,6 +1241,7 @@ export function AdminDashboard({ user }) {
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
   const [coupons, setCoupons] = useState([]);
+  const [roleRequests, setRoleRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
 
@@ -1281,11 +1282,44 @@ export function AdminDashboard({ user }) {
       } else {
         toast.error('Failed to retrieve coupon registry.');
       }
+
+      const requestRes = await fetch(`${API_BASE}/api/admin/role-requests`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
+      if (requestRes.ok) {
+        const requestData = await requestRes.json();
+        setRoleRequests(requestData || []);
+      } else {
+        toast.error('Failed to retrieve role upgrade requests.');
+      }
     } catch (err) {
       console.error(err);
       toast.error('Central security link lost.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResolveRequest = async (requestId, status) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/role-requests/${requestId}/resolve`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({ status })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(`Clearance upgrade ${status === 'approved' ? 'approved' : 'rejected'}.`);
+        fetchAdminData();
+      } else {
+        toast.error(data.message || 'Failed to resolve request.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to communicate with authorization center.');
     }
   };
 
@@ -1584,6 +1618,85 @@ export function AdminDashboard({ user }) {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          {/* Role Upgrade Requests Matrix */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-display font-bold text-white tracking-widest uppercase">
+              ✦ ROLE PRIVILEGE UPGRADE REQUESTS ✦
+            </h3>
+            
+            <div className="overflow-x-auto border border-zinc-900 rounded-3xl bg-zinc-950/40">
+              {roleRequests.length === 0 ? (
+                <div className="p-8 text-center text-xs font-mono text-zinc-500 italic">
+                  No role upgrade requests logged in the security buffer.
+                </div>
+              ) : (
+                <table className="w-full text-left border-collapse text-xs font-mono">
+                  <thead>
+                    <tr className="border-b border-zinc-900 bg-black/60 text-gray-400 font-display text-[9px] tracking-widest">
+                      <th className="p-4">REQUEST ID</th>
+                      <th className="p-4">USER DETAILS</th>
+                      <th className="p-4">REQUESTED LEVEL</th>
+                      <th className="p-4">JUSTIFICATION / REASON</th>
+                      <th className="p-4">LOGGED AT</th>
+                      <th className="p-4">STATUS</th>
+                      <th className="p-4 text-right">RESOLVING ACTIONS</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-900 text-gray-300">
+                    {roleRequests.map(req => (
+                      <tr key={req.id} className="hover:bg-zinc-950/80 transition-colors">
+                        <td className="p-4 text-cyber-cyan">#NX_REQ_{req.id}</td>
+                        <td className="p-4">
+                          <div className="text-white font-sans font-medium">{req.user?.name}</div>
+                          <div className="text-[10px] text-zinc-500">{req.user?.email}</div>
+                          <div className="text-[9px] text-zinc-600">Current: {req.user?.role?.toUpperCase()}</div>
+                        </td>
+                        <td className="p-4">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyber-gold/10 text-cyber-gold border border-cyber-gold/25 font-display uppercase">
+                            {req.requestedRole === 'seller' ? 'SELLER' : 'ORDER MANAGER'}
+                          </span>
+                        </td>
+                        <td className="p-4 max-w-xs truncate text-[11px]" title={req.reason}>
+                          {req.reason}
+                        </td>
+                        <td className="p-4 text-gray-500">{new Date(req.createdAt).toLocaleString()}</td>
+                        <td className="p-4">
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                            req.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 animate-pulse' :
+                            req.status === 'approved' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
+                            'bg-red-500/10 text-red-500 border border-red-500/20'
+                          }`}>
+                            {req.status}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right">
+                          {req.status === 'pending' ? (
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => handleResolveRequest(req.id, 'approved')}
+                                className="px-2.5 py-1 text-[9px] font-display text-green-400 border border-green-500/20 hover:border-green-500 hover:bg-green-500/10 rounded transition-colors"
+                              >
+                                APPROVE
+                              </button>
+                              <button
+                                onClick={() => handleResolveRequest(req.id, 'rejected')}
+                                className="px-2.5 py-1 text-[9px] font-display text-red-400 border border-red-500/20 hover:border-red-500 hover:bg-red-500/10 rounded transition-colors"
+                              >
+                                REJECT
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-zinc-600 italic">RESOLVED</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
 

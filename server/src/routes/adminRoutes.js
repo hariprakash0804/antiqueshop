@@ -1,6 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { getUsers, updateUserRole, getPlatformStats, deleteUser, resetDatabase, getCoupons, createCoupon, deleteCoupon } = require('../controllers/adminController');
+const { 
+  getUsers, 
+  updateUserRole, 
+  getPlatformStats, 
+  deleteUser, 
+  resetDatabase, 
+  getCoupons, 
+  createCoupon, 
+  deleteCoupon,
+  getRoleRequests,
+  resolveRoleRequest
+} = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 // All routes here require Admin privilege
@@ -15,5 +26,8 @@ router.post('/reset-db', resetDatabase);
 router.get('/coupons', getCoupons);
 router.post('/coupons', createCoupon);
 router.delete('/coupons/:code', deleteCoupon);
+
+router.get('/role-requests', getRoleRequests);
+router.put('/role-requests/:id/resolve', resolveRoleRequest);
 
 module.exports = router;
