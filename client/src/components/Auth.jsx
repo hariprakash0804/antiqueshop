@@ -138,23 +138,6 @@ export function Auth({ onAuthSuccess, onClose }) {
               className="w-full bg-black/60 border border-zinc-800 focus:border-cyber-gold focus:outline-none rounded-xl p-3 text-sm font-mono placeholder-zinc-700 transition-all"
             />
           </div>
-
-          {!isLogin && (
-            <div className="space-y-1">
-              <label className="block text-xs font-display tracking-wider text-gray-400">INTERFACE ROLE</label>
-              <select 
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full bg-black/60 border border-zinc-800 focus:border-cyber-gold focus:outline-none rounded-xl p-3 text-sm font-display text-cyber-gold transition-all"
-              >
-                <option value="customer">CUSTOMER (BUYER)</option>
-                <option value="seller">SELLER (MERCHANT)</option>
-                <option value="order_manager">ORDER MANAGER (LOGISTICS)</option>
-                <option value="admin">ADMINISTRATOR (OVERLORD)</option>
-              </select>
-            </div>
-          )}
-
           <button 
             type="submit"
             disabled={loading}
