@@ -7,12 +7,25 @@ const seedDatabase = async () => {
   try {
     // 1. Proactively create database if it doesn't exist
     console.log('Verifying MySQL database for seeding...');
-    const connection = await mysql.createConnection({
+    const connectionOptions = {
       host: process.env.DB_HOST,
       port: process.env.DB_PORT || 3306,
       user: process.env.DB_USER,
       password: process.env.DB_PASS
-    });
+    };
+    
+    if (
+      process.env.DB_SSL === 'true' || 
+      (process.env.DB_HOST && process.env.DB_HOST.includes('tidbcloud.com')) || 
+      process.env.DB_SSL_REJECT_UNAUTHORIZED !== undefined
+    ) {
+      connectionOptions.ssl = {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'false' ? false : true
+      };
+    }
+
+    const connection = await mysql.createConnection(connectionOptions);
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\`;`);
     await connection.end();
     console.log(`Database '${process.env.DB_NAME}' verified.`);
