@@ -508,7 +508,7 @@ export function Catalog({ onAddToCart, user }) {
                     {/* Wishlist Heart */}
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleWishlist(product.id); }}
-                      className={`absolute top-4 right-4 w-9 h-9 rounded-xl bg-black/70 backdrop-blur border flex items-center justify-center text-sm transition-all duration-300 z-10 ${
+                      className={`absolute top-4 right-4 w-9 h-9 rounded-xl bg-black/70 backdrop-blur border flex items-center justify-center text-sm transition-all duration-300 z-20 ${
                         wishlistIds.has(product.id) 
                           ? 'border-red-500 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)] scale-105' 
                           : 'border-zinc-750 text-gray-200 hover:text-red-550 hover:border-red-500 hover:scale-105'
