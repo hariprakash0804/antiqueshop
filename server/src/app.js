@@ -108,6 +108,28 @@ const startServer = async () => {
     await sequelize.sync();
     console.log('Database models synchronized.');
 
+    // Ensure newly added columns exist in the database (since we don't use alter: true)
+    try {
+      const [results] = await sequelize.query("SHOW COLUMNS FROM `Orders`;");
+      const columns = results.map(r => (r.Field || '').toLowerCase());
+      
+      if (!columns.includes('subtotalamount')) {
+        console.log("Adding subtotalAmount column to Orders table...");
+        await sequelize.query("ALTER TABLE `Orders` ADD COLUMN `subtotalAmount` DECIMAL(10, 2) NOT NULL DEFAULT 0.00;");
+      }
+      if (!columns.includes('taxamount')) {
+        console.log("Adding taxAmount column to Orders table...");
+        await sequelize.query("ALTER TABLE `Orders` ADD COLUMN `taxAmount` DECIMAL(10, 2) NOT NULL DEFAULT 0.00;");
+      }
+      if (!columns.includes('discountamount')) {
+        console.log("Adding discountAmount column to Orders table...");
+        await sequelize.query("ALTER TABLE `Orders` ADD COLUMN `discountAmount` DECIMAL(10, 2) NOT NULL DEFAULT 0.00;");
+      }
+      console.log("Orders table columns verified.");
+    } catch (columnError) {
+      console.warn("[DATABASE WARNING] Could not verify/add columns automatically:", columnError.message);
+    }
+
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
