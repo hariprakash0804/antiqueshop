@@ -508,10 +508,10 @@ export function Catalog({ onAddToCart, user }) {
                     {/* Wishlist Heart */}
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleWishlist(product.id); }}
-                      className={`absolute top-4 right-4 w-8 h-8 rounded-full bg-black/80 backdrop-blur border flex items-center justify-center text-sm transition-all duration-300 ${
+                      className={`absolute top-4 right-4 w-9 h-9 rounded-xl bg-black/70 backdrop-blur border flex items-center justify-center text-sm transition-all duration-300 z-10 ${
                         wishlistIds.has(product.id) 
-                          ? 'border-red-500 text-red-500 shadow-lg' 
-                          : 'border-zinc-700 text-zinc-600 hover:text-red-400 hover:border-red-400'
+                          ? 'border-red-500 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)] scale-105' 
+                          : 'border-zinc-750 text-gray-200 hover:text-red-550 hover:border-red-500 hover:scale-105'
                       }`}
                     >
                       {wishlistIds.has(product.id) ? '♥' : '♡'}
@@ -624,10 +624,14 @@ export function Catalog({ onAddToCart, user }) {
                 {/* Wishlist Heart on modal image */}
                 <button 
                   onClick={(e) => { e.stopPropagation(); toggleWishlist(selectedProduct.id); }}
-                  className="absolute top-4 left-4 z-10 w-9 h-9 flex items-center justify-center rounded-xl bg-black/60 border border-zinc-800 hover:border-cyber-gold hover:text-cyber-gold transition-all duration-300"
+                  className={`absolute top-4 left-4 z-10 w-9 h-9 flex items-center justify-center rounded-xl bg-black/70 backdrop-blur border transition-all duration-300 ${
+                    wishlistIds.has(selectedProduct.id)
+                      ? 'border-red-500 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)] scale-105'
+                      : 'border-zinc-750 text-gray-200 hover:text-red-550 hover:border-red-500 hover:scale-105'
+                  }`}
                   title={wishlistIds.has(selectedProduct.id) ? "Remove from Wishlist" : "Add to Wishlist"}
                 >
-                  <span className={`text-base leading-none ${wishlistIds.has(selectedProduct.id) ? 'text-red-500 font-bold' : 'text-gray-400 hover:text-cyber-gold'}`}>
+                  <span className="text-base leading-none">
                     {wishlistIds.has(selectedProduct.id) ? '♥' : '♡'}
                   </span>
                 </button>
