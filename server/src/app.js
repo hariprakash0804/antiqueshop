@@ -87,10 +87,14 @@ const startServer = async () => {
       };
     }
 
-    const connection = await mysql.createConnection(connectionOptions);
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\`;`);
-    await connection.end();
-    console.log(`Database '${process.env.DB_NAME}' verified/created.`);
+    try {
+      const connection = await mysql.createConnection(connectionOptions);
+      await connection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\`;`);
+      await connection.end();
+      console.log(`Database '${process.env.DB_NAME}' verified/created.`);
+    } catch (dbError) {
+      console.warn(`[DATABASE WARNING] Could not verify/create database automatically: ${dbError.message}. Relying on existing schema connection.`);
+    }
 
     // 2. Authenticate database connection via Sequelize
     await sequelize.authenticate();

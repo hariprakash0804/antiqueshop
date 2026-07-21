@@ -25,10 +25,14 @@ const seedDatabase = async () => {
       };
     }
 
-    const connection = await mysql.createConnection(connectionOptions);
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\`;`);
-    await connection.end();
-    console.log(`Database '${process.env.DB_NAME}' verified.`);
+    try {
+      const connection = await mysql.createConnection(connectionOptions);
+      await connection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\`;`);
+      await connection.end();
+      console.log(`Database '${process.env.DB_NAME}' verified.`);
+    } catch (dbError) {
+      console.warn(`[DATABASE WARNING] Could not verify/create database automatically: ${dbError.message}. Relying on existing schema connection.`);
+    }
 
     // Sync database (force sync deletes all current records)
     await sequelize.sync({ force: true });

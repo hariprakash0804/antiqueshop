@@ -1594,22 +1594,28 @@ export function AdminDashboard({ user }) {
             </div>
             
             {/* List active coupons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {coupons.map((coupon) => (
-                <div key={coupon.code} className="p-4 rounded-2xl bg-black/60 border border-zinc-900 flex justify-between items-center font-mono text-xs">
-                  <div>
-                    <span className="text-white font-bold block">{coupon.code}</span>
-                    <span className="text-cyber-cyan text-[10px]">{coupon.discount}% Discount</span>
+            {coupons.length === 0 ? (
+              <div className="text-[10px] text-zinc-600 font-mono italic py-2">
+                No active promotional codes found in the registry database.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {coupons.map((coupon) => (
+                  <div key={coupon.code} className="p-4 rounded-2xl bg-black/60 border border-zinc-900 flex justify-between items-center font-mono text-xs">
+                    <div>
+                      <span className="text-white font-bold block">{coupon.code}</span>
+                      <span className="text-cyber-cyan text-[10px]">{coupon.discount}% Discount</span>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteCoupon(coupon.code)}
+                      className="text-[9px] font-display text-red-500 hover:text-red-400 tracking-wider"
+                    >
+                      [DELETE]
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleDeleteCoupon(coupon.code)}
-                    className="text-[9px] font-display text-red-500 hover:text-red-400 tracking-wider"
-                  >
-                    [DELETE]
-                  </button>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             {/* Create new coupon form */}
             <form 
@@ -1628,11 +1634,11 @@ export function AdminDashboard({ user }) {
             >
               <input 
                 name="code" type="text" placeholder="NEW PROMO CODE..." required
-                className="flex-1 bg-black border border-zinc-800 text-xs font-mono rounded-xl p-3 focus:outline-none placeholder-zinc-800 text-white"
+                className="flex-1 bg-black border border-zinc-800 text-xs font-mono rounded-xl p-3 focus:outline-none placeholder-zinc-500 text-white"
               />
               <input 
                 name="discount" type="number" min="1" max="100" placeholder="DISCOUNT %..." required
-                className="w-full sm:w-32 bg-black border border-zinc-800 text-xs font-mono rounded-xl p-3 focus:outline-none placeholder-zinc-800 text-white"
+                className="w-full sm:w-32 bg-black border border-zinc-800 text-xs font-mono rounded-xl p-3 focus:outline-none placeholder-zinc-500 text-white"
               />
               <button 
                 type="submit"
