@@ -95,8 +95,8 @@ exports.getPlatformStats = async (req, res) => {
       }
     });
 
-    // Top selling products
-    const topProducts = await OrderItem.findAll({
+    // Top selling products (split query to ensure compatibility with strict ONLY_FULL_GROUP_BY modes like TiDB)
+    const topOrderItems = await OrderItem.findAll({
       attributes: [
         'productId',
         [sequelize.fn('SUM', sequelize.col('quantity')), 'totalSold'],
@@ -104,9 +104,22 @@ exports.getPlatformStats = async (req, res) => {
       ],
       group: ['productId'],
       order: [[sequelize.literal('totalSold'), 'DESC']],
-      limit: 5,
-      include: [{ model: Product, as: 'product', attributes: ['id', 'title', 'imageUrl', 'price'] }]
+      limit: 5
     });
+
+    const topProducts = await Promise.all(
+      topOrderItems.map(async (item) => {
+        const product = await Product.findByPk(item.productId, {
+          attributes: ['id', 'title', 'imageUrl', 'price']
+        });
+        return {
+          productId: item.productId,
+          totalSold: parseInt(item.getDataValue('totalSold')) || 0,
+          totalRevenue: parseFloat(item.getDataValue('totalRevenue')) || 0,
+          product: product ? product.toJSON() : null
+        };
+      })
+    );
 
     // Recent orders (last 10)
     const recentActivityOrders = await Order.findAll({

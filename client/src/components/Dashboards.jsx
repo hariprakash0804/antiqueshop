@@ -1254,20 +1254,33 @@ export function AdminDashboard({ user }) {
       const userRes = await fetch(`${API_BASE}/api/admin/users`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
       });
-      const userData = await userRes.json();
-      setUsers(userData);
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        setUsers(userData);
+      } else {
+        toast.error('Failed to retrieve client directory.');
+      }
 
       const statRes = await fetch(`${API_BASE}/api/admin/stats`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
       });
-      const statData = await statRes.json();
-      setStats(statData);
+      if (statRes.ok) {
+        const statData = await statRes.json();
+        setStats(statData);
+      } else {
+        toast.error('Failed to retrieve platform telemetry.');
+        setStats(null);
+      }
 
       const couponRes = await fetch(`${API_BASE}/api/admin/coupons`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
       });
-      const couponData = await couponRes.json();
-      setCoupons(couponData || []);
+      if (couponRes.ok) {
+        const couponData = await couponRes.json();
+        setCoupons(couponData || []);
+      } else {
+        toast.error('Failed to retrieve coupon registry.');
+      }
     } catch (err) {
       console.error(err);
       toast.error('Central security link lost.');
