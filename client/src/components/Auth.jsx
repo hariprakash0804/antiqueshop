@@ -6,7 +6,7 @@ export function Auth({ onAuthSuccess, onClose }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('customer'); // Default to customer
+  const [role] = useState('customer'); // Default to customer
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
