@@ -131,12 +131,12 @@ export function CommsTerminal({ isOpen, onClose, user }) {
       </div>
 
       {/* Active Channels selection */}
-      <div className="grid grid-cols-3 border-b border-zinc-900 text-[9px] font-display font-bold tracking-wider uppercase text-center bg-zinc-950/40">
+      <div className="grid grid-cols-3 border-b border-zinc-900 text-[8px] sm:text-[9px] font-display font-bold tracking-wider uppercase text-center bg-zinc-950/40">
         {Object.keys(logs).map(channel => (
           <button
             key={channel}
             onClick={() => setActiveChannel(channel)}
-            className={`py-3.5 border-r border-zinc-900/60 last:border-0 transition-all ${
+            className={`py-2.5 sm:py-3.5 px-1 truncate border-r border-zinc-900/60 last:border-0 transition-all ${
               activeChannel === channel 
                 ? 'text-cyber-cyan bg-cyan-950/10 border-b border-b-cyber-cyan' 
                 : 'text-zinc-500 hover:text-white'

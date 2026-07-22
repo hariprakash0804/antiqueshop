@@ -79,7 +79,7 @@ export function Hero({ onExploreClick }) {
   const slide = slides[activeSlide] || DEFAULT_HERO_SLIDES[0];
 
   return (
-    <div className="relative h-[480px] md:h-[550px] w-full overflow-hidden bg-black border-b border-zinc-900 flex items-center">
+    <div className="relative min-h-[440px] py-8 sm:py-0 md:h-[550px] w-full overflow-hidden bg-black border-b border-zinc-900 flex items-center">
       {/* Background Cyber Grid */}
       <div className="absolute inset-0 cyber-grid opacity-40"></div>
       
@@ -101,34 +101,34 @@ export function Hero({ onExploreClick }) {
       </div>
 
       {/* Content Console */}
-      <div className="relative max-w-7xl mx-auto px-6 lg:px-12 w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center z-10">
-        <div className="space-y-6 animate-fade-in holo-flicker">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 w-full grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-center z-10">
+        <div className="space-y-4 sm:space-y-6 animate-fade-in holo-flicker">
           <div className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-cyber-gold animate-ping"></span>
-            <span className="text-[10px] font-display tracking-[0.3em] text-cyber-gold">{slide.subtitle}</span>
+            <span className="text-[9px] sm:text-[10px] font-display tracking-[0.25em] sm:tracking-[0.3em] text-cyber-gold">{slide.subtitle}</span>
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-display font-black tracking-wider leading-tight">
+          <h1 className="text-2xl sm:text-4xl md:text-6xl font-display font-black tracking-wider leading-tight">
             {slide.title}
           </h1>
 
-          <p className="text-sm md:text-base text-gray-400 font-sans max-w-lg leading-relaxed line-clamp-3">
+          <p className="text-xs sm:text-sm md:text-base text-gray-400 font-sans max-w-lg leading-relaxed line-clamp-2 sm:line-clamp-3">
             {slide.description}
           </p>
 
-          <div className="flex items-baseline gap-4 pt-2">
-            <span className="text-xs text-gray-500 font-display">VALUATION:</span>
-            <span className="text-2xl font-display font-extrabold text-cyber-gold">{slide.price}</span>
+          <div className="flex items-baseline gap-3 sm:gap-4 pt-1 sm:pt-2">
+            <span className="text-[10px] sm:text-xs text-gray-500 font-display">VALUATION:</span>
+            <span className="text-xl sm:text-2xl font-display font-extrabold text-cyber-gold">{slide.price}</span>
           </div>
 
-          <div className="flex items-center gap-4 pt-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-2 sm:pt-4">
             <button 
               onClick={onExploreClick}
-              className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 hover:from-yellow-600 hover:to-cyber-gold text-black font-display font-bold tracking-widest text-xs transition-all duration-300 transform active:scale-95 shadow-gold-glow"
+              className="px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 hover:from-yellow-600 hover:to-cyber-gold text-black font-display font-bold tracking-widest text-[11px] sm:text-xs transition-all duration-300 transform active:scale-95 shadow-gold-glow"
             >
               LAUNCH EXPLORER
             </button>
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 items-center">
               {slides.map((_, idx) => (
                 <button
                   key={idx}

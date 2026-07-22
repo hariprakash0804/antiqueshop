@@ -47,7 +47,7 @@ export function WishlistView({ user, onAddToCart, setView }) {
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-12 px-6 animate-fade-in">
+    <div className="max-w-5xl mx-auto py-8 sm:py-12 px-4 sm:px-6 animate-fade-in">
       {/* Back button */}
       <button 
         onClick={() => setView('catalog')}
@@ -83,7 +83,7 @@ export function WishlistView({ user, onAddToCart, setView }) {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {items.map(item => {
             const product = item.product;
             if (!product) return null;

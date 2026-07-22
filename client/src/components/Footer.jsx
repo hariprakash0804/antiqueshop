@@ -36,7 +36,7 @@ export function Footer({ setView, activeView }) {
 
   return (
     <>
-      <footer className="border-t border-zinc-900/80 bg-zinc-950/80 backdrop-blur-md py-12 px-6 lg:px-12 relative overflow-hidden">
+      <footer className="border-t border-zinc-900/80 bg-zinc-950/80 backdrop-blur-md py-8 sm:py-12 px-4 sm:px-6 lg:px-12 relative overflow-hidden">
         {/* Glow grid lines in background */}
         <div className="absolute inset-0 cyber-grid opacity-10 pointer-events-none"></div>
 
@@ -132,8 +132,8 @@ export function Footer({ setView, activeView }) {
 
       {/* About The Console Modal */}
       {showAbout && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-lg overflow-hidden glass-panel-neon-gold rounded-3xl p-8 pulse-gold-glow">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto glass-panel-neon-gold rounded-3xl p-5 sm:p-8 pulse-gold-glow">
             <div className="scanline"></div>
             
             <button 

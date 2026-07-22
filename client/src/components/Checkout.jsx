@@ -196,10 +196,10 @@ export function Checkout({ user, cartItems, onPaymentSuccess, setView, onUpdateQ
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-12 px-6 lg:px-12 grid grid-cols-1 md:grid-cols-2 gap-10">
+    <div className="max-w-5xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-12 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
       
       {/* Checkout Console */}
-      <div className="glass-panel-neon-gold p-8 rounded-3xl space-y-6 pulse-gold-glow relative">
+      <div className="glass-panel-neon-gold p-5 sm:p-8 rounded-3xl space-y-6 pulse-gold-glow relative">
         <div className="scanline"></div>
         <h2 className="text-xl font-display font-extrabold text-cyber-gold tracking-widest">
           GATEWAY SECURE CHECKOUT
@@ -336,7 +336,7 @@ export function Checkout({ user, cartItems, onPaymentSuccess, setView, onUpdateQ
       </div>
 
       {/* Cart Summary Panel with editing capabilities */}
-      <div className="bg-zinc-950/80 border border-zinc-900 rounded-3xl p-8 space-y-6 glass-panel">
+      <div className="bg-zinc-950/80 border border-zinc-900 rounded-3xl p-5 sm:p-8 space-y-6 glass-panel">
         <h3 className="text-sm font-display font-bold text-white tracking-widest border-b border-zinc-900 pb-4">
           INVOICE BREAKDOWN
         </h3>

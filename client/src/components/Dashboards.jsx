@@ -76,7 +76,7 @@ function InvoiceModal({ order, onClose }) {
           }
         }
       `}} />
-      <div className="relative w-full max-w-xl glass-panel border border-cyber-gold/45 rounded-3xl p-8 space-y-6 pulse-gold-glow print-modal-container print:border-0 print:shadow-none print:w-full print:max-w-none print:h-full print:bg-white print:text-black">
+      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto glass-panel border border-cyber-gold/45 rounded-3xl p-4 sm:p-8 space-y-6 pulse-gold-glow print-modal-container print:border-0 print:shadow-none print:w-full print:max-w-none print:h-full print:bg-white print:text-black">
         {/* Printable Section wrapper */}
         <div id="print-area" className="space-y-6 print:text-black font-mono">
           {/* Header */}
@@ -345,7 +345,7 @@ export function CustomerDashboard({ user }) {
       ) : (
         <div className="space-y-6">
           {orders.map(order => (
-            <div key={order.id} className="p-6 rounded-3xl bg-zinc-950/70 border border-zinc-900 hover:border-zinc-800 transition-all space-y-4">
+            <div key={order.id} className="p-4 sm:p-6 rounded-3xl bg-zinc-950/70 border border-zinc-900 hover:border-zinc-800 transition-all space-y-4">
               <div className="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-900 pb-4">
                 <div className="space-y-1">
                   <div className="text-xs font-display text-white">ORDER ID: #NX_{order.id}084</div>

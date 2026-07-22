@@ -226,7 +226,7 @@ function App() {
         )}
 
         {view === 'dashboard' && user && (
-          <div className="max-w-7xl mx-auto py-12 px-6 lg:px-12 bg-zinc-950/20 rounded-3xl border border-zinc-900/60 my-6">
+          <div className="max-w-7xl mx-auto py-6 sm:py-12 px-3 sm:px-6 lg:px-12 bg-zinc-950/20 rounded-3xl border border-zinc-900/60 my-4 sm:my-6">
             {user.role === 'customer' && <CustomerDashboard user={user} />}
             {user.role === 'seller' && <SellerDashboard user={user} />}
             {user.role === 'order_manager' && <OrderManagerDashboard user={user} />}

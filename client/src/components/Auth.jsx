@@ -42,8 +42,8 @@ export function Auth({ onAuthSuccess, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      <div className="relative w-full max-w-md overflow-hidden glass-panel-neon-gold rounded-3xl p-8 pulse-gold-glow animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md">
+      <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto glass-panel-neon-gold rounded-3xl p-5 sm:p-8 pulse-gold-glow animate-fade-in">
         {/* Futuristic Scanline */}
         <div className="scanline"></div>
 

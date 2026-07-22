@@ -151,7 +151,7 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
   const inputClass = "w-full bg-black/60 border border-zinc-800 focus:border-cyber-gold focus:outline-none rounded-xl p-3 text-sm font-mono placeholder-zinc-700 text-white transition-all";
 
   return (
-    <div className="max-w-2xl mx-auto py-12 px-6 animate-fade-in">
+    <div className="max-w-2xl mx-auto py-8 sm:py-12 px-4 sm:px-6 animate-fade-in">
       {/* Back button */}
       <button 
         onClick={() => setView('dashboard')}
@@ -160,7 +160,7 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
         ← BACK TO CONTROL PANEL
       </button>
 
-      <div className="glass-panel-neon-gold rounded-3xl p-8 space-y-8">
+      <div className="glass-panel-neon-gold rounded-3xl p-5 sm:p-8 space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="flex items-center gap-4 pb-6 border-b border-zinc-900">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyber-gold/20 to-cyber-cyan/20 border border-zinc-800 flex items-center justify-center text-3xl font-display font-black text-cyber-gold">

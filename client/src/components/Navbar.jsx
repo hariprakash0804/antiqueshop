@@ -13,14 +13,14 @@ export function Navbar({ user, cartCount, wishlistCount = 0, onOpenCart, onOpenC
   );
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-cyber-dark/85 backdrop-blur-md border-b border-zinc-900 py-4 px-6 lg:px-12 transition-all">
+    <header className="sticky top-0 z-40 w-full bg-cyber-dark/85 backdrop-blur-md border-b border-zinc-900 py-3.5 px-3 sm:px-6 lg:px-12 transition-all">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {/* Logo Console */}
         <div 
           onClick={() => setView('catalog')}
-          className="flex items-center gap-2 cursor-pointer group"
+          className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group"
         >
-          <span className="text-xl font-display font-extrabold tracking-widest bg-gradient-to-r from-cyber-gold to-yellow-600 bg-clip-text text-transparent group-hover:drop-shadow-cyan-glow transition-all">
+          <span className="text-lg sm:text-xl font-display font-extrabold tracking-widest bg-gradient-to-r from-cyber-gold to-yellow-600 bg-clip-text text-transparent group-hover:drop-shadow-cyan-glow transition-all">
             NEXUS
           </span>
           <span className="hidden sm:inline font-display text-[9px] border border-cyber-cyan text-cyber-cyan rounded-md px-1.5 py-0.5 tracking-widest holo-flicker">
@@ -36,7 +36,7 @@ export function Navbar({ user, cartCount, wishlistCount = 0, onOpenCart, onOpenC
         </nav>
 
         {/* Action Center */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Wishlist icon (desktop) */}
           {user && (
             <button 
@@ -57,7 +57,7 @@ export function Navbar({ user, cartCount, wishlistCount = 0, onOpenCart, onOpenC
           {user && (
             <button 
               onClick={onOpenComms}
-              className="relative p-2.5 rounded-xl border border-zinc-800 hover:border-cyber-gold bg-zinc-950/50 text-gray-300 hover:text-cyber-gold transition-all duration-300"
+              className="relative p-2 sm:p-2.5 rounded-xl border border-zinc-800 hover:border-cyber-gold bg-zinc-950/50 text-gray-300 hover:text-cyber-gold transition-all duration-300"
               title="Neural Comms Terminal"
             >
               <span className="font-display text-sm">💬</span>
@@ -67,7 +67,7 @@ export function Navbar({ user, cartCount, wishlistCount = 0, onOpenCart, onOpenC
           {/* Cart Icon */}
           <button 
             onClick={onOpenCart}
-            className="relative p-2.5 rounded-xl border border-zinc-800 hover:border-cyber-cyan bg-zinc-950/50 text-gray-300 hover:text-cyber-cyan transition-all duration-300"
+            className="relative p-2 sm:p-2.5 rounded-xl border border-zinc-800 hover:border-cyber-cyan bg-zinc-950/50 text-gray-300 hover:text-cyber-cyan transition-all duration-300"
             title="Open Cart"
           >
             <span className="font-display text-sm">🛒</span>
@@ -122,11 +122,11 @@ export function Navbar({ user, cartCount, wishlistCount = 0, onOpenCart, onOpenC
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden mt-4 pt-4 border-t border-zinc-900 space-y-3 animate-fade-in">
-          <nav className="flex flex-col gap-3 font-display text-xs tracking-widest text-gray-400">
+        <div className="md:hidden mt-3 pt-3 border-t border-zinc-900 space-y-3 animate-fade-in max-h-[80vh] overflow-y-auto pr-1">
+          <nav className="flex flex-col gap-2 font-display text-xs tracking-widest text-gray-400">
             <button 
               onClick={() => { setView('catalog'); setMobileMenuOpen(false); }}
-              className={`text-left py-2 px-3 rounded-xl transition-all ${activeView === 'catalog' ? 'text-cyber-gold bg-cyber-gold/10' : 'hover:text-white'}`}
+              className={`text-left py-2.5 px-3 rounded-xl transition-all ${activeView === 'catalog' ? 'text-cyber-gold bg-cyber-gold/10 font-bold' : 'hover:text-white'}`}
             >
               CATALOGUE
             </button>
@@ -134,30 +134,30 @@ export function Navbar({ user, cartCount, wishlistCount = 0, onOpenCart, onOpenC
               <>
                 <button 
                   onClick={() => { setView('dashboard'); setMobileMenuOpen(false); }}
-                  className={`text-left py-2 px-3 rounded-xl transition-all ${activeView === 'dashboard' ? 'text-cyber-gold bg-cyber-gold/10' : 'hover:text-white'}`}
+                  className={`text-left py-2.5 px-3 rounded-xl transition-all ${activeView === 'dashboard' ? 'text-cyber-gold bg-cyber-gold/10 font-bold' : 'hover:text-white'}`}
                 >
                   CONTROL PANEL
                 </button>
                 <button 
                   onClick={() => { setView('wishlist'); setMobileMenuOpen(false); }}
-                  className={`text-left py-2 px-3 rounded-xl transition-all ${activeView === 'wishlist' ? 'text-cyber-gold bg-cyber-gold/10' : 'hover:text-white'}`}
+                  className={`text-left py-2.5 px-3 rounded-xl transition-all ${activeView === 'wishlist' ? 'text-cyber-gold bg-cyber-gold/10 font-bold' : 'hover:text-white'}`}
                 >
                   ♥ WISHLIST
                 </button>
                 <button 
                   onClick={() => { setView('profile'); setMobileMenuOpen(false); }}
-                  className={`text-left py-2 px-3 rounded-xl transition-all ${activeView === 'profile' ? 'text-cyber-gold bg-cyber-gold/10' : 'hover:text-white'}`}
+                  className={`text-left py-2.5 px-3 rounded-xl transition-all ${activeView === 'profile' ? 'text-cyber-gold bg-cyber-gold/10 font-bold' : 'hover:text-white'}`}
                 >
                   ⚙ PROFILE SETTINGS
                 </button>
-                <div className="flex items-center justify-between py-2 px-3 bg-zinc-950/50 rounded-xl">
+                <div className="flex items-center justify-between py-2.5 px-3 bg-zinc-950/50 rounded-xl border border-zinc-900">
                   <div>
-                    <div className="text-xs text-white">{user.name}</div>
-                    <div className="text-[9px] text-cyber-gold">{user.role.toUpperCase()}</div>
+                    <div className="text-xs text-white font-medium">{user.name}</div>
+                    <div className="text-[9px] text-cyber-gold font-mono">{user.role.toUpperCase()}</div>
                   </div>
                   <button 
                     onClick={() => { onLogout(); setMobileMenuOpen(false); }}
-                    className="text-[10px] font-display text-red-400 border border-red-500/30 rounded-lg px-2 py-1"
+                    className="text-[10px] font-display text-red-400 border border-red-500/30 rounded-lg px-2.5 py-1"
                   >
                     DISCONNECT
                   </button>
@@ -167,7 +167,7 @@ export function Navbar({ user, cartCount, wishlistCount = 0, onOpenCart, onOpenC
             {!user && (
               <button 
                 onClick={() => { onOpenAuth(); setMobileMenuOpen(false); }}
-                className="text-left py-2 px-3 rounded-xl border border-cyber-gold text-cyber-gold hover:bg-cyber-gold/10 transition-all"
+                className="text-left py-2.5 px-3 rounded-xl border border-cyber-gold text-cyber-gold hover:bg-cyber-gold/10 transition-all font-bold"
               >
                 CONNECT
               </button>

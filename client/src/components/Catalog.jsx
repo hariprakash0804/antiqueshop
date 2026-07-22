@@ -386,11 +386,11 @@ export function Catalog({ onAddToCart, user }) {
     : [];
 
   return (
-    <section id="catalog-section" className="py-12 px-6 lg:px-12 max-w-7xl mx-auto space-y-10">
+    <section id="catalog-section" className="py-8 sm:py-12 px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto space-y-6 sm:space-y-10">
       
       {/* Search, Filter & Sort Console */}
-      <div className="flex flex-col gap-6 bg-zinc-950/80 border border-zinc-900 rounded-3xl p-6 glass-panel">
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
+      <div className="flex flex-col gap-5 sm:gap-6 bg-zinc-950/80 border border-zinc-900 rounded-3xl p-4 sm:p-6 glass-panel">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sm:gap-6">
           {/* Search */}
           <form onSubmit={handleSearchSubmit} className="flex-1 max-w-md relative">
             <input 
@@ -398,24 +398,24 @@ export function Catalog({ onAddToCart, user }) {
               placeholder="Search catalog matrix..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-black/60 border border-zinc-800 focus:border-cyber-cyan focus:outline-none rounded-2xl py-3 pl-5 pr-12 text-sm font-mono placeholder-zinc-700 transition-all text-white"
+              className="w-full bg-black/60 border border-zinc-800 focus:border-cyber-cyan focus:outline-none rounded-2xl py-2.5 sm:py-3 pl-4 sm:pl-5 pr-12 text-xs sm:text-sm font-mono placeholder-zinc-700 transition-all text-white"
             />
             <button 
               type="submit"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-cyber-cyan font-display hover:text-white transition-colors text-xs"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-cyber-cyan font-display hover:text-white transition-colors text-[10px] sm:text-xs"
             >
               [SCAN]
             </button>
           </form>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center w-full lg:w-auto">
             {/* Categories */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => { setCategory(cat); setSearch(''); setPage(1); }}
-                  className={`px-4 py-2 rounded-xl text-xs font-display tracking-widest transition-all ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-display tracking-widest transition-all ${
                     category === cat 
                       ? 'bg-cyber-gold text-black font-extrabold border border-cyber-gold shadow-gold-glow'
                       : 'bg-transparent border border-zinc-800 text-gray-400 hover:text-white hover:border-zinc-700'
@@ -429,7 +429,7 @@ export function Catalog({ onAddToCart, user }) {
             {/* Sort */}
             <select 
               value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }}
-              className="bg-black border border-zinc-800 text-xs font-display text-cyber-cyan rounded-xl p-2.5 focus:outline-none focus:border-cyber-cyan"
+              className="w-full sm:w-auto bg-black border border-zinc-800 text-[11px] sm:text-xs font-display text-cyber-cyan rounded-xl p-2.5 focus:outline-none focus:border-cyber-cyan"
             >
               <option value="newest">NEWEST</option>
               <option value="oldest">OLDEST</option>
@@ -440,15 +440,15 @@ export function Catalog({ onAddToCart, user }) {
         </div>
 
         {/* Additional Filters row */}
-        <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-zinc-900/60">
-          <span className="text-[10px] font-display text-gray-500 tracking-wider">VALUATION THRESHOLD:</span>
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-3 sm:pt-4 border-t border-zinc-900/60 text-xs">
+          <span className="text-[9px] sm:text-[10px] font-display text-gray-500 tracking-wider">VALUATION THRESHOLD:</span>
           <div className="flex items-center gap-2">
             <input 
               type="number" 
               placeholder="MIN INR" 
               value={minPrice} 
               onChange={e => { setMinPrice(e.target.value); setPage(1); }}
-              className="w-28 bg-black/50 border border-zinc-800 focus:border-cyber-gold text-xs font-mono rounded-lg p-2 focus:outline-none text-white text-center"
+              className="w-24 sm:w-28 bg-black/50 border border-zinc-800 focus:border-cyber-gold text-xs font-mono rounded-lg p-2 focus:outline-none text-white text-center"
             />
             <span className="text-zinc-600 text-xs">➔</span>
             <input 
@@ -456,7 +456,7 @@ export function Catalog({ onAddToCart, user }) {
               placeholder="MAX INR" 
               value={maxPrice} 
               onChange={e => { setPage(1); setMaxPrice(e.target.value); }}
-              className="w-28 bg-black/50 border border-zinc-800 focus:border-cyber-gold text-xs font-mono rounded-lg p-2 focus:outline-none text-white text-center"
+              className="w-24 sm:w-28 bg-black/50 border border-zinc-800 focus:border-cyber-gold text-xs font-mono rounded-lg p-2 focus:outline-none text-white text-center"
             />
           </div>
           {(minPrice || maxPrice) && (
@@ -472,16 +472,16 @@ export function Catalog({ onAddToCart, user }) {
 
       {/* Grid Console */}
       {loading ? (
-        <div className="text-center py-20 font-display text-cyber-gold tracking-widest holo-flicker">
+        <div className="text-center py-20 font-display text-cyber-gold tracking-widest holo-flicker text-xs sm:text-sm">
           LOADING DIGITAL MATRICES...
         </div>
       ) : products.length === 0 ? (
-        <div className="text-center py-20 font-display text-gray-500 tracking-wider">
+        <div className="text-center py-20 font-display text-gray-500 tracking-wider text-xs sm:text-sm">
           NO MATCHING ARTIFACTS RETRIEVED
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
             {products.map((product) => {
               const productImages = product.imageUrl ? product.imageUrl.split(',').map(s => s.trim()).filter(Boolean) : [];
               const mainImg = productImages[0] || 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=400';
@@ -492,7 +492,7 @@ export function Catalog({ onAddToCart, user }) {
                   className="group overflow-hidden rounded-3xl bg-zinc-950/70 border border-zinc-900 hover:border-cyber-gold/40 transition-all duration-500 flex flex-col justify-between"
                 >
                   {/* Product Image Window */}
-                  <div className="relative h-64 overflow-hidden bg-black">
+                  <div className="relative h-56 sm:h-64 overflow-hidden bg-black">
                     <img 
                       src={mainImg} 
                       alt={product.title}
@@ -501,14 +501,14 @@ export function Catalog({ onAddToCart, user }) {
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent"></div>
                     
                     {/* Category badge */}
-                    <span className="absolute top-4 left-4 bg-black/80 backdrop-blur-md border border-cyber-cyan text-cyber-cyan font-display text-[9px] tracking-widest rounded-lg px-2.5 py-1">
+                    <span className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-black/80 backdrop-blur-md border border-cyber-cyan text-cyber-cyan font-display text-[9px] tracking-widest rounded-lg px-2.5 py-1">
                       {product.category.toUpperCase()}
                     </span>
 
                     {/* Wishlist Heart */}
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleWishlist(product.id); }}
-                      className={`absolute top-4 right-4 w-9 h-9 rounded-xl bg-black/70 backdrop-blur border flex items-center justify-center text-sm transition-all duration-300 z-20 ${
+                      className={`absolute top-3 right-3 sm:top-4 sm:right-4 w-9 h-9 rounded-xl bg-black/70 backdrop-blur border flex items-center justify-center text-sm transition-all duration-300 z-20 ${
                         wishlistIds.has(product.id) 
                           ? 'border-red-500 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)] scale-105' 
                           : 'border-zinc-750 text-gray-200 hover:text-red-550 hover:border-red-500 hover:scale-105'
@@ -525,9 +525,9 @@ export function Catalog({ onAddToCart, user }) {
                   </div>
 
                   {/* Details Pane */}
-                  <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
+                  <div className="p-5 sm:p-6 space-y-4 flex-1 flex flex-col justify-between">
                     <div className="space-y-2">
-                      <h3 className="text-lg font-display font-bold text-white tracking-wide group-hover:text-cyber-gold transition-colors">
+                      <h3 className="text-base sm:text-lg font-display font-bold text-white tracking-wide group-hover:text-cyber-gold transition-colors">
                         {product.title}
                       </h3>
                       <p className="text-xs text-gray-400 font-sans line-clamp-2 leading-relaxed">
@@ -537,31 +537,31 @@ export function Catalog({ onAddToCart, user }) {
                       <StarRating rating={product.avgRating || 0} count={product.reviewCount || 0} />
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-3.5">
                       <div className="flex justify-between items-baseline">
                         <span className="text-[10px] text-gray-500 font-display">VALUATION:</span>
-                        <span className="text-lg font-display font-extrabold text-cyber-gold">
+                        <span className="text-base sm:text-lg font-display font-extrabold text-cyber-gold">
                           ₹{parseFloat(product.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                         <button
                           onClick={() => { setSelectedProduct(product); setActiveImgIndex(0); }}
-                          className="py-2.5 rounded-xl border border-zinc-800 text-gray-400 hover:text-white hover:border-zinc-700 font-display text-[10px] tracking-widest transition-all"
+                          className="py-2 sm:py-2.5 px-1 rounded-xl border border-zinc-800 text-gray-400 hover:text-white hover:border-zinc-700 font-display text-[9px] sm:text-[10px] tracking-wider truncate transition-all"
                         >
                           INSPECT
                         </button>
                         <button
                           onClick={() => setReviewProduct(product)}
-                          className="py-2.5 rounded-xl border border-zinc-800 text-gray-400 hover:text-cyber-cyan hover:border-cyber-cyan/30 font-display text-[10px] tracking-widest transition-all"
+                          className="py-2 sm:py-2.5 px-1 rounded-xl border border-zinc-800 text-gray-400 hover:text-cyber-cyan hover:border-cyber-cyan/30 font-display text-[9px] sm:text-[10px] tracking-wider truncate transition-all"
                         >
                           REVIEWS
                         </button>
                         <button
                           onClick={() => handleAddToCart(product)}
                           disabled={product.stock === 0}
-                          className="py-2.5 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 hover:from-yellow-600 hover:to-cyber-gold text-black font-display font-bold text-[10px] tracking-widest transition-all transform active:scale-95 disabled:opacity-30 disabled:scale-100"
+                          className="py-2 sm:py-2.5 px-1 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 hover:from-yellow-600 hover:to-cyber-gold text-black font-display font-bold text-[9px] sm:text-[10px] tracking-wider truncate transition-all transform active:scale-95 disabled:opacity-30 disabled:scale-100"
                         >
                           ACQUIRE
                         </button>
@@ -575,11 +575,11 @@ export function Catalog({ onAddToCart, user }) {
 
           {/* Pagination */}
           {pagination && pagination.pages > 1 && (
-            <div className="flex justify-center items-center gap-3 pt-6">
+            <div className="flex justify-center items-center gap-2 sm:gap-3 pt-6">
               <button 
                 disabled={page <= 1} 
                 onClick={() => setPage(p => p - 1)}
-                className="px-4 py-2 rounded-xl border border-zinc-800 text-gray-400 hover:text-white font-display text-[10px] tracking-widest disabled:opacity-30 transition-all"
+                className="px-3 sm:px-4 py-2 rounded-xl border border-zinc-800 text-gray-400 hover:text-white font-display text-[9px] sm:text-[10px] tracking-widest disabled:opacity-30 transition-all"
               >
                 ← PREV
               </button>
@@ -590,7 +590,7 @@ export function Catalog({ onAddToCart, user }) {
                     <button 
                       key={pageNum}
                       onClick={() => setPage(pageNum)}
-                      className={`w-8 h-8 rounded-lg font-display text-xs transition-all ${
+                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg font-display text-xs transition-all ${
                         page === pageNum
                           ? 'bg-cyber-gold text-black font-bold'
                           : 'border border-zinc-800 text-gray-400 hover:text-white'
@@ -604,7 +604,7 @@ export function Catalog({ onAddToCart, user }) {
               <button 
                 disabled={page >= (pagination?.pages || 1)} 
                 onClick={() => setPage(p => p + 1)}
-                className="px-4 py-2 rounded-xl border border-zinc-800 text-gray-400 hover:text-white font-display text-[10px] tracking-widest disabled:opacity-30 transition-all"
+                className="px-3 sm:px-4 py-2 rounded-xl border border-zinc-800 text-gray-400 hover:text-white font-display text-[9px] sm:text-[10px] tracking-widest disabled:opacity-30 transition-all"
               >
                 NEXT →
               </button>
@@ -615,8 +615,8 @@ export function Catalog({ onAddToCart, user }) {
 
       {/* Inspect Product Modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-2xl overflow-hidden glass-panel-neon-gold rounded-3xl pulse-gold-glow grid grid-cols-1 md:grid-cols-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto glass-panel-neon-gold rounded-3xl pulse-gold-glow grid grid-cols-1 md:grid-cols-2">
             
             {/* Modal Image & Switcher */}
             <div className="h-[350px] md:h-full bg-black relative flex flex-col justify-between">
