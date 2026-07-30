@@ -136,9 +136,9 @@ export function CommsTerminal({ isOpen, onClose, user }) {
           <button
             key={channel}
             onClick={() => setActiveChannel(channel)}
-            className={`py-2.5 sm:py-3.5 px-1 truncate border-r border-zinc-900/60 last:border-0 transition-all ${
+            className={`py-3 sm:py-3.5 px-1 truncate border-r border-zinc-900/60 last:border-0 transition-all min-h-[44px] flex items-center justify-center ${
               activeChannel === channel 
-                ? 'text-cyber-cyan bg-cyan-950/10 border-b border-b-cyber-cyan' 
+                ? 'text-cyber-cyan bg-cyan-950/20 border-b-2 border-b-cyber-cyan font-bold' 
                 : 'text-zinc-500 hover:text-white'
             }`}
           >

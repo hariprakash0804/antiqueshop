@@ -107,7 +107,8 @@ export function Navbar({ user, cartCount, wishlistCount = 0, onOpenCart, onOpenC
           {/* Mobile Hamburger */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl border border-zinc-800 text-gray-300 hover:text-white transition-colors"
+            className="md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center p-2.5 rounded-xl border border-zinc-800 text-gray-300 hover:text-white bg-zinc-950/60 active:scale-95 transition-all"
+            aria-label="Toggle navigation menu"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {mobileMenuOpen ? (
@@ -122,42 +123,46 @@ export function Navbar({ user, cartCount, wishlistCount = 0, onOpenCart, onOpenC
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden mt-3 pt-3 border-t border-zinc-900 space-y-3 animate-fade-in max-h-[80vh] overflow-y-auto pr-1">
+        <div className="md:hidden mt-3 pt-3 pb-2 border-t border-zinc-900 space-y-3 animate-fade-in max-h-[85vh] overflow-y-auto pr-1">
           <nav className="flex flex-col gap-2 font-display text-xs tracking-widest text-gray-400">
             <button 
               onClick={() => { setView('catalog'); setMobileMenuOpen(false); }}
-              className={`text-left py-2.5 px-3 rounded-xl transition-all ${activeView === 'catalog' ? 'text-cyber-gold bg-cyber-gold/10 font-bold' : 'hover:text-white'}`}
+              className={`text-left py-3 px-4 rounded-xl min-h-[44px] flex items-center gap-2 transition-all ${activeView === 'catalog' ? 'text-cyber-gold bg-cyber-gold/15 font-bold border border-cyber-gold/30' : 'hover:text-white bg-zinc-950/40 border border-zinc-900/60'}`}
             >
-              CATALOGUE
+              <span>❖</span>
+              <span>CATALOGUE</span>
             </button>
             {user && (
               <>
                 <button 
                   onClick={() => { setView('dashboard'); setMobileMenuOpen(false); }}
-                  className={`text-left py-2.5 px-3 rounded-xl transition-all ${activeView === 'dashboard' ? 'text-cyber-gold bg-cyber-gold/10 font-bold' : 'hover:text-white'}`}
+                  className={`text-left py-3 px-4 rounded-xl min-h-[44px] flex items-center gap-2 transition-all ${activeView === 'dashboard' ? 'text-cyber-gold bg-cyber-gold/15 font-bold border border-cyber-gold/30' : 'hover:text-white bg-zinc-950/40 border border-zinc-900/60'}`}
                 >
-                  CONTROL PANEL
+                  <span>⚡</span>
+                  <span>CONTROL PANEL</span>
                 </button>
                 <button 
                   onClick={() => { setView('wishlist'); setMobileMenuOpen(false); }}
-                  className={`text-left py-2.5 px-3 rounded-xl transition-all ${activeView === 'wishlist' ? 'text-cyber-gold bg-cyber-gold/10 font-bold' : 'hover:text-white'}`}
+                  className={`text-left py-3 px-4 rounded-xl min-h-[44px] flex items-center gap-2 transition-all ${activeView === 'wishlist' ? 'text-cyber-gold bg-cyber-gold/15 font-bold border border-cyber-gold/30' : 'hover:text-white bg-zinc-950/40 border border-zinc-900/60'}`}
                 >
-                  ♥ WISHLIST
+                  <span>♥</span>
+                  <span>WISHLIST ({wishlistCount})</span>
                 </button>
                 <button 
                   onClick={() => { setView('profile'); setMobileMenuOpen(false); }}
-                  className={`text-left py-2.5 px-3 rounded-xl transition-all ${activeView === 'profile' ? 'text-cyber-gold bg-cyber-gold/10 font-bold' : 'hover:text-white'}`}
+                  className={`text-left py-3 px-4 rounded-xl min-h-[44px] flex items-center gap-2 transition-all ${activeView === 'profile' ? 'text-cyber-gold bg-cyber-gold/15 font-bold border border-cyber-gold/30' : 'hover:text-white bg-zinc-950/40 border border-zinc-900/60'}`}
                 >
-                  ⚙ PROFILE SETTINGS
+                  <span>⚙</span>
+                  <span>PROFILE SETTINGS</span>
                 </button>
-                <div className="flex items-center justify-between py-2.5 px-3 bg-zinc-950/50 rounded-xl border border-zinc-900">
+                <div className="flex items-center justify-between p-3.5 bg-zinc-950/80 rounded-xl border border-zinc-850 mt-1">
                   <div>
                     <div className="text-xs text-white font-medium">{user.name}</div>
                     <div className="text-[9px] text-cyber-gold font-mono">{user.role.toUpperCase()}</div>
                   </div>
                   <button 
                     onClick={() => { onLogout(); setMobileMenuOpen(false); }}
-                    className="text-[10px] font-display text-red-400 border border-red-500/30 rounded-lg px-2.5 py-1"
+                    className="text-[10px] font-display text-red-400 border border-red-500/30 rounded-lg px-3 py-1.5 min-h-[36px] flex items-center active:bg-red-500/20"
                   >
                     DISCONNECT
                   </button>
@@ -167,7 +172,7 @@ export function Navbar({ user, cartCount, wishlistCount = 0, onOpenCart, onOpenC
             {!user && (
               <button 
                 onClick={() => { onOpenAuth(); setMobileMenuOpen(false); }}
-                className="text-left py-2.5 px-3 rounded-xl border border-cyber-gold text-cyber-gold hover:bg-cyber-gold/10 transition-all font-bold"
+                className="text-center py-3.5 px-4 rounded-xl border border-cyber-gold text-cyber-gold hover:bg-cyber-gold hover:text-black transition-all font-bold tracking-widest min-h-[44px] shadow-gold-glow mt-1"
               >
                 CONNECT
               </button>

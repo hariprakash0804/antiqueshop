@@ -133,10 +133,13 @@ export function Hero({ onExploreClick }) {
                 <button
                   key={idx}
                   onClick={() => setActiveSlide(idx)}
-                  className={`h-2.5 rounded-full transition-all duration-300 ${
-                    idx === activeSlide ? 'w-8 bg-cyber-gold' : 'w-2.5 bg-zinc-800'
-                  }`}
-                />
+                  className="p-1 min-w-[28px] min-h-[28px] flex items-center justify-center"
+                  aria-label={`Slide ${idx + 1}`}
+                >
+                  <span className={`h-2.5 rounded-full transition-all duration-300 block ${
+                    idx === activeSlide ? 'w-7 bg-cyber-gold' : 'w-2.5 bg-zinc-800'
+                  }`} />
+                </button>
               ))}
             </div>
           </div>

@@ -410,15 +410,15 @@ export function Catalog({ onAddToCart, user }) {
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center w-full lg:w-auto">
             {/* Categories */}
-            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+            <div className="flex overflow-x-auto pb-1 sm:pb-0 sm:flex-wrap gap-2 w-full lg:w-auto -mx-1 px-1 no-scrollbar">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => { setCategory(cat); setSearch(''); setPage(1); }}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-display tracking-widest transition-all ${
+                  className={`px-3.5 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-display tracking-widest transition-all shrink-0 min-h-[36px] flex items-center justify-center ${
                     category === cat 
                       ? 'bg-cyber-gold text-black font-extrabold border border-cyber-gold shadow-gold-glow'
-                      : 'bg-transparent border border-zinc-800 text-gray-400 hover:text-white hover:border-zinc-700'
+                      : 'bg-zinc-950/60 border border-zinc-800 text-gray-400 hover:text-white hover:border-zinc-700'
                   }`}
                 >
                   {cat.toUpperCase()}
@@ -429,7 +429,7 @@ export function Catalog({ onAddToCart, user }) {
             {/* Sort */}
             <select 
               value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }}
-              className="w-full sm:w-auto bg-black border border-zinc-800 text-[11px] sm:text-xs font-display text-cyber-cyan rounded-xl p-2.5 focus:outline-none focus:border-cyber-cyan"
+              className="w-full sm:w-auto bg-black border border-zinc-800 text-[11px] sm:text-xs font-display text-cyber-cyan rounded-xl p-2.5 min-h-[38px] focus:outline-none focus:border-cyber-cyan"
             >
               <option value="newest">NEWEST</option>
               <option value="oldest">OLDEST</option>
@@ -441,14 +441,14 @@ export function Catalog({ onAddToCart, user }) {
 
         {/* Additional Filters row */}
         <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-3 sm:pt-4 border-t border-zinc-900/60 text-xs">
-          <span className="text-[9px] sm:text-[10px] font-display text-gray-500 tracking-wider">VALUATION THRESHOLD:</span>
-          <div className="flex items-center gap-2">
+          <span className="text-[9px] sm:text-[10px] font-display text-gray-500 tracking-wider w-full sm:w-auto">VALUATION THRESHOLD:</span>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <input 
               type="number" 
               placeholder="MIN INR" 
               value={minPrice} 
               onChange={e => { setMinPrice(e.target.value); setPage(1); }}
-              className="w-24 sm:w-28 bg-black/50 border border-zinc-800 focus:border-cyber-gold text-xs font-mono rounded-lg p-2 focus:outline-none text-white text-center"
+              className="w-full sm:w-28 bg-black/50 border border-zinc-800 focus:border-cyber-gold text-xs font-mono rounded-lg p-2.5 focus:outline-none text-white text-center"
             />
             <span className="text-zinc-600 text-xs">➔</span>
             <input 
@@ -456,7 +456,7 @@ export function Catalog({ onAddToCart, user }) {
               placeholder="MAX INR" 
               value={maxPrice} 
               onChange={e => { setPage(1); setMaxPrice(e.target.value); }}
-              className="w-24 sm:w-28 bg-black/50 border border-zinc-800 focus:border-cyber-gold text-xs font-mono rounded-lg p-2 focus:outline-none text-white text-center"
+              className="w-full sm:w-28 bg-black/50 border border-zinc-800 focus:border-cyber-gold text-xs font-mono rounded-lg p-2.5 focus:outline-none text-white text-center"
             />
           </div>
           {(minPrice || maxPrice) && (

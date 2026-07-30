@@ -85,17 +85,19 @@ export function Cart({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveIte
 
                     {/* Controls */}
                     <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center gap-2 border border-zinc-800 bg-black/50 rounded-lg p-0.5">
+                      <div className="flex items-center gap-1 border border-zinc-800 bg-black/60 rounded-xl p-1">
                         <button
                           onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                          className="h-6 w-6 text-xs text-gray-400 hover:text-white"
+                          className="h-7 w-7 flex items-center justify-center text-xs text-gray-400 hover:text-white bg-zinc-900 rounded-lg active:scale-95 transition-all"
+                          aria-label="Decrease quantity"
                         >
                           -
                         </button>
-                        <span className="text-xs font-mono px-2 text-white">{item.quantity}</span>
+                        <span className="text-xs font-mono px-2.5 text-white font-bold">{item.quantity}</span>
                         <button
                           onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                          className="h-6 w-6 text-xs text-gray-400 hover:text-white"
+                          className="h-7 w-7 flex items-center justify-center text-xs text-gray-400 hover:text-white bg-zinc-900 rounded-lg active:scale-95 transition-all"
+                          aria-label="Increase quantity"
                         >
                           +
                         </button>

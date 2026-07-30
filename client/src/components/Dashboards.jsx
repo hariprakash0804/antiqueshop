@@ -708,27 +708,27 @@ export function SellerDashboard({ user }) {
           <p className="text-[10px] font-mono text-zinc-500 mt-1">OPERATED BY: {user.name.toUpperCase()}</p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <button 
             onClick={() => setViewTab('inventory')}
-            className={`px-4 py-2 rounded-xl text-xs font-display tracking-wider transition-all ${
-              viewTab === 'inventory' ? 'bg-cyber-gold text-black font-bold' : 'border border-zinc-950 text-gray-400 hover:text-white'
+            className={`flex-1 sm:flex-initial px-3.5 py-2.5 rounded-xl text-[11px] sm:text-xs font-display tracking-wider transition-all min-h-[38px] flex items-center justify-center ${
+              viewTab === 'inventory' ? 'bg-cyber-gold text-black font-bold' : 'border border-zinc-800 text-gray-400 hover:text-white bg-zinc-950/60'
             }`}
           >
             INVENTORY MATRIX
           </button>
           <button 
             onClick={() => setViewTab('sales')}
-            className={`px-4 py-2 rounded-xl text-xs font-display tracking-wider transition-all ${
-              viewTab === 'sales' ? 'bg-cyber-gold text-black font-bold' : 'border border-zinc-950 text-gray-400 hover:text-white'
+            className={`flex-1 sm:flex-initial px-3.5 py-2.5 rounded-xl text-[11px] sm:text-xs font-display tracking-wider transition-all min-h-[38px] flex items-center justify-center ${
+              viewTab === 'sales' ? 'bg-cyber-gold text-black font-bold' : 'border border-zinc-800 text-gray-400 hover:text-white bg-zinc-950/60'
             }`}
           >
             SALES LOGS ({orders.length})
           </button>
           <button 
             onClick={() => { resetForm(); setViewTab('add'); }}
-            className={`px-4 py-2 rounded-xl text-xs font-display tracking-wider transition-all ${
-              viewTab === 'add' ? 'bg-cyber-cyan text-black font-bold shadow-cyan-glow' : 'border border-zinc-950 text-gray-400 hover:text-white'
+            className={`w-full sm:w-auto px-3.5 py-2.5 rounded-xl text-[11px] sm:text-xs font-display tracking-wider transition-all min-h-[38px] flex items-center justify-center ${
+              viewTab === 'add' ? 'bg-cyber-cyan text-black font-bold shadow-cyan-glow' : 'border border-zinc-800 text-gray-400 hover:text-white bg-zinc-950/60'
             }`}
           >
             {editMode ? 'EDIT PRODUCT' : 'LIST PRODUCT'}
@@ -742,7 +742,7 @@ export function SellerDashboard({ user }) {
         <>
           {/* Seller Analytics Summary Cards */}
           {viewTab === 'inventory' && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
               <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-900">
                 <div className="text-[9px] font-display text-zinc-500 tracking-wider">TOTAL LISTED</div>
                 <div className="text-xl font-display font-bold text-white mt-1">{products.length} ITEMS</div>
@@ -1248,19 +1248,19 @@ export function OrderManagerDashboard({ user }) {
                 </div>
 
                 {/* Operations Dropdown with Notes parameters */}
-                <div className="flex flex-wrap items-center gap-3 self-end justify-end">
+                <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full md:w-auto">
                   <input 
                     type="text" 
                     placeholder="Enter logistics logs / details..." 
                     value={logisticsNotes[order.id] || ''}
                     onChange={(e) => setLogisticsNotes({ ...logisticsNotes, [order.id]: e.target.value })}
-                    className="w-48 bg-black/60 border border-zinc-800 focus:border-cyber-cyan text-xs font-mono rounded-lg p-2 focus:outline-none placeholder-zinc-800 text-white"
+                    className="w-full sm:w-48 bg-black/60 border border-zinc-800 focus:border-cyber-cyan text-xs font-mono rounded-lg p-2.5 focus:outline-none placeholder-zinc-700 text-white"
                   />
 
                   <select
                     value={order.status}
                     onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
-                    className="bg-black border border-zinc-800 focus:border-cyber-cyan text-xs font-display text-cyber-cyan rounded-lg p-2 focus:outline-none"
+                    className="w-full sm:w-auto bg-black border border-zinc-800 focus:border-cyber-cyan text-xs font-display text-cyber-cyan rounded-lg p-2.5 min-h-[38px] focus:outline-none"
                   >
                     <option value="Pending">PENDING</option>
                     <option value="Paid">PAID</option>
