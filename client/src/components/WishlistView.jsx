@@ -99,7 +99,7 @@ export function WishlistView({ user, onAddToCart, setView }) {
                   <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
                   <button 
                     onClick={() => handleRemove(product.id)}
-                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/80 border border-red-500/30 flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-all"
+                    className="absolute top-3 right-3 w-9 h-9 min-w-[36px] min-h-[36px] rounded-xl bg-black/80 backdrop-blur border border-red-500/30 flex items-center justify-center text-red-500 hover:bg-red-500/20 active:scale-95 transition-all"
                     title="Remove from wishlist"
                   >
                     ♥
@@ -127,7 +127,7 @@ export function WishlistView({ user, onAddToCart, setView }) {
                     <button 
                       onClick={() => handleAddToCart(product)}
                       disabled={product.stock === 0}
-                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 text-black font-display font-bold text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-30"
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 text-black font-display font-bold text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-30 min-h-[38px] flex items-center justify-center"
                     >
                       ACQUIRE
                     </button>

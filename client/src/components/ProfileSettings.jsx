@@ -259,7 +259,7 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
                   className={inputClass}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="block text-[10px] font-display text-gray-400 tracking-wider">NEW PASSWORD</label>
                   <input 

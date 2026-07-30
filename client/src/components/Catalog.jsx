@@ -616,15 +616,24 @@ export function Catalog({ onAddToCart, user }) {
       {/* Inspect Product Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/90 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto glass-panel-neon-gold rounded-3xl pulse-gold-glow grid grid-cols-1 md:grid-cols-2">
+          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto glass-panel-neon-gold rounded-2xl sm:rounded-3xl pulse-gold-glow grid grid-cols-1 md:grid-cols-2">
             
+            {/* Global Sticky Close Button */}
+            <button 
+              onClick={() => setSelectedProduct(null)}
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 min-w-[36px] min-h-[36px] flex items-center justify-center text-gray-400 hover:text-cyber-gold font-display text-sm bg-black/80 hover:bg-black rounded-xl border border-zinc-800 backdrop-blur-md transition-all active:scale-95"
+              aria-label="Close modal"
+            >
+              [X]
+            </button>
+
             {/* Modal Image & Switcher */}
-            <div className="h-[350px] md:h-full bg-black relative flex flex-col justify-between">
+            <div className="h-[250px] sm:h-[320px] md:h-full bg-black relative flex flex-col justify-between">
               <div className="flex-1 w-full relative overflow-hidden bg-black/25">
                 {/* Wishlist Heart on modal image */}
                 <button 
                   onClick={(e) => { e.stopPropagation(); toggleWishlist(selectedProduct.id); }}
-                  className={`absolute top-4 left-4 z-10 w-9 h-9 flex items-center justify-center rounded-xl bg-black/70 backdrop-blur border transition-all duration-300 ${
+                  className={`absolute top-3 left-3 z-10 w-9 h-9 flex items-center justify-center rounded-xl bg-black/70 backdrop-blur border transition-all duration-300 ${
                     wishlistIds.has(selectedProduct.id)
                       ? 'border-red-500 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)] scale-105'
                       : 'border-zinc-750 text-gray-200 hover:text-red-550 hover:border-red-500 hover:scale-105'
@@ -645,12 +654,12 @@ export function Catalog({ onAddToCart, user }) {
 
               {/* Thumbnails Swapping Row */}
               {modalImages.length > 1 && (
-                <div className="p-3 bg-black/90 flex gap-2 overflow-x-auto border-t border-zinc-900/60 justify-center">
+                <div className="p-2.5 bg-black/90 flex gap-2 overflow-x-auto border-t border-zinc-900/60 justify-start sm:justify-center no-scrollbar">
                   {modalImages.map((imgUrl, idx) => (
                     <button
                       key={idx}
                       onClick={() => setActiveImgIndex(idx)}
-                      className={`w-12 h-12 rounded-lg border overflow-hidden shrink-0 transition-all ${
+                      className={`w-11 h-11 sm:w-12 sm:h-12 rounded-lg border overflow-hidden shrink-0 transition-all ${
                         idx === activeImgIndex ? 'border-cyber-gold shadow-gold-glow scale-105' : 'border-zinc-850 opacity-60 hover:opacity-100'
                       }`}
                     >
@@ -662,34 +671,27 @@ export function Catalog({ onAddToCart, user }) {
             </div>
 
             {/* Modal Content */}
-            <div className="p-6 md:p-8 space-y-6 flex flex-col justify-between">
+            <div className="p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6 flex flex-col justify-between">
               <div>
-                <button 
-                  onClick={() => setSelectedProduct(null)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-cyber-gold font-display text-lg"
-                >
-                  [X]
-                </button>
-
-                <span className="text-[10px] font-display text-cyber-cyan border border-cyber-cyan/30 rounded px-2 py-0.5 tracking-widest">
+                <span className="text-[10px] font-display text-cyber-cyan border border-cyber-cyan/30 rounded px-2 py-0.5 tracking-widest inline-block">
                   {selectedProduct.category.toUpperCase()}
                 </span>
                 
-                <h2 className="text-xl md:text-2xl font-display font-extrabold text-white tracking-wide mt-4">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-display font-extrabold text-white tracking-wide mt-3 pr-8">
                   {selectedProduct.title}
                 </h2>
 
                 {/* Rating */}
-                <div className="mt-3">
+                <div className="mt-2.5">
                   <StarRating rating={selectedProduct.avgRating || 0} count={selectedProduct.reviewCount || 0} />
                 </div>
                 
-                <p className="text-xs md:text-sm text-gray-400 font-sans leading-relaxed mt-4">
+                <p className="text-xs sm:text-sm text-gray-400 font-sans leading-relaxed mt-3 sm:mt-4">
                   {selectedProduct.description}
                 </p>
 
                 {/* Specs */}
-                <div className="mt-6 pt-4 border-t border-zinc-900 space-y-2 text-xs font-mono">
+                <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-zinc-900 space-y-2 text-xs font-mono">
                   <div className="flex justify-between">
                     <span className="text-gray-500">SERIAL ID:</span>
                     <span className="text-cyber-cyan">#NX_{selectedProduct.id}084</span>
@@ -713,28 +715,28 @@ export function Catalog({ onAddToCart, user }) {
                       const parsed = JSON.parse(selectedProduct.specifications);
                       if (parsed.spec1 || parsed.spec2) {
                         return (
-                          <div className="mt-4 p-3 rounded-xl bg-black/40 border border-zinc-900/60 text-xs font-mono space-y-1.5">
+                          <div className="mt-3 sm:mt-4 p-3 rounded-xl bg-black/40 border border-zinc-900/60 text-xs font-mono space-y-1.5">
                             <span className="text-[8px] font-display text-cyber-cyan tracking-widest block mb-1">REGISTRY PROPERTIES:</span>
                             {parsed.spec1 && (
-                              <div className="flex justify-between gap-4">
+                              <div className="flex justify-between gap-3">
                                 <span className="text-zinc-500 uppercase shrink-0">
                                   {selectedProduct.category === 'Jewelry' ? 'Material/Metal' :
                                    selectedProduct.category === 'Watches' ? 'Caliber/Movement' :
                                    selectedProduct.category === 'Antiques' ? 'Historical Era' :
                                    selectedProduct.category === 'Coins' ? 'Grade/Certification' : 'Property A'}
                                 </span>
-                                <span className="text-gray-350 text-right truncate">{parsed.spec1}</span>
+                                <span className="text-gray-300 text-right truncate">{parsed.spec1}</span>
                               </div>
                             )}
                             {parsed.spec2 && (
-                              <div className="flex justify-between gap-4">
+                              <div className="flex justify-between gap-3">
                                 <span className="text-zinc-500 uppercase shrink-0">
                                   {selectedProduct.category === 'Jewelry' ? 'Primary Gemstone' :
                                    selectedProduct.category === 'Watches' ? 'Manufacture Year' :
                                    selectedProduct.category === 'Antiques' ? 'Source/Origin' :
                                    selectedProduct.category === 'Coins' ? 'Composition' : 'Property B'}
                                 </span>
-                                <span className="text-gray-355 text-right truncate">{parsed.spec2}</span>
+                                <span className="text-gray-300 text-right truncate">{parsed.spec2}</span>
                               </div>
                             )}
                           </div>
@@ -749,14 +751,14 @@ export function Catalog({ onAddToCart, user }) {
 
                 {/* Place a Bid / Bid Console */}
                 {(selectedProduct.category === 'Antiques' || selectedProduct.stock === 1) && (
-                  <div className="mt-4 p-3.5 rounded-2xl bg-cyber-gold/5 border border-cyber-gold/20 text-xs font-mono space-y-2">
+                  <div className="mt-3 sm:mt-4 p-3 sm:p-3.5 rounded-2xl bg-cyber-gold/5 border border-cyber-gold/20 text-xs font-mono space-y-2">
                     <div className="flex justify-between items-center">
-                        <span className="text-[8px] font-display text-cyber-gold tracking-widest block uppercase font-bold">
+                      <span className="text-[8px] font-display text-cyber-gold tracking-widest block uppercase font-bold">
                         ✦ VIRTUAL AUCTION & BID CONSOLE ✦
                       </span>
                       <span className="text-[8px] border border-cyber-gold/45 text-cyber-gold px-1 rounded animate-pulse">LIVE AUCTION</span>
                     </div>
-                    <div className="flex justify-between items-center text-[10px] text-zinc-400">
+                    <div className="flex flex-wrap justify-between items-center text-[10px] text-zinc-400 gap-1">
                       <span>EST. RESERVE: ₹{parseFloat(selectedProduct.price).toLocaleString()}</span>
                       {auctionTimeLeft && (
                         <span className="text-red-400 font-bold border border-red-500/25 px-1.5 py-0.5 rounded animate-pulse text-[8px] tracking-wider">
@@ -767,12 +769,12 @@ export function Catalog({ onAddToCart, user }) {
                     <div className="flex justify-between text-[10px] text-zinc-400">
                       <span>CURRENT HIGH: <span className="text-white font-bold">₹{Math.round(parseFloat(selectedProduct.price) * 1.08).toLocaleString()}</span></span>
                     </div>
-                    <div className="flex gap-2 pt-1">
+                    <div className="flex flex-col sm:flex-row gap-2 pt-1">
                       <input 
                         type="number"
                         id="bid-amount-input"
                         placeholder="Offer Valuation (INR)..."
-                        className="flex-1 bg-black border border-zinc-800 text-[10px] font-mono rounded p-2 focus:outline-none focus:border-cyber-gold text-white placeholder-zinc-800"
+                        className="w-full sm:flex-1 bg-black border border-zinc-800 text-[10px] font-mono rounded-xl p-2.5 focus:outline-none focus:border-cyber-gold text-white placeholder-zinc-700"
                       />
                       <button
                         type="button"
@@ -786,7 +788,7 @@ export function Catalog({ onAddToCart, user }) {
                             document.getElementById('bid-amount-input').value = '';
                           }
                         }}
-                        className="px-3.5 py-2 bg-gradient-to-r from-cyber-gold to-yellow-600 hover:from-yellow-600 hover:to-cyber-gold text-black font-display font-extrabold text-[9px] tracking-wider rounded"
+                        className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-cyber-gold to-yellow-600 hover:from-yellow-600 hover:to-cyber-gold text-black font-display font-extrabold text-[10px] tracking-wider rounded-xl transition-all active:scale-95 shrink-0"
                       >
                         SUBMIT BID
                       </button>
@@ -795,25 +797,25 @@ export function Catalog({ onAddToCart, user }) {
                 )}
               </div>
 
-              <div className="space-y-3">
-                <div className="flex justify-between items-baseline pt-4 border-t border-zinc-900">
+              <div className="space-y-3 pt-3">
+                <div className="flex justify-between items-baseline pt-3 border-t border-zinc-900">
                   <span className="text-xs text-gray-500 font-display">VALUATION:</span>
-                  <span className="text-xl font-display font-extrabold text-cyber-gold">
+                  <span className="text-lg sm:text-xl font-display font-extrabold text-cyber-gold">
                     ₹{parseFloat(selectedProduct.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                   <button
                     onClick={() => { setReviewProduct(selectedProduct); setSelectedProduct(null); }}
-                    className="py-3 rounded-xl border border-cyber-cyan/30 text-cyber-cyan font-display text-[10px] tracking-widest hover:bg-cyber-cyan/10 transition-all"
+                    className="py-3 rounded-xl border border-cyber-cyan/30 text-cyber-cyan font-display text-[10px] tracking-widest hover:bg-cyber-cyan/10 transition-all min-h-[44px] flex items-center justify-center active:scale-95"
                   >
                     VIEW REVIEWS
                   </button>
                   <button
                     onClick={() => { handleAddToCart(selectedProduct); setSelectedProduct(null); }}
                     disabled={selectedProduct.stock === 0}
-                    className="py-3 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 hover:from-yellow-600 hover:to-cyber-gold text-black font-display font-bold tracking-widest text-xs transition-all active:scale-95 disabled:opacity-30 disabled:scale-100 shadow-gold-glow"
+                    className="py-3 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 hover:from-yellow-600 hover:to-cyber-gold text-black font-display font-bold tracking-widest text-xs transition-all active:scale-95 disabled:opacity-30 disabled:scale-100 shadow-gold-glow min-h-[44px] flex items-center justify-center"
                   >
                     ADD TO CART
                   </button>
