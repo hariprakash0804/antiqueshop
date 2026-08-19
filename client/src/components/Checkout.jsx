@@ -58,7 +58,7 @@ export function Checkout({ user, cartItems, onPaymentSuccess, setView, onUpdateQ
     setLoading(true);
 
     try {
-      // 1. Create order in Database
+      // 1. Create order in Database (Server computes authoritative prices, tax, and discount)
       const orderRes = await fetch(`${API_BASE}/api/orders`, {
         method: 'POST',
         headers: {
@@ -68,13 +68,9 @@ export function Checkout({ user, cartItems, onPaymentSuccess, setView, onUpdateQ
         body: JSON.stringify({
           items: cartItems.map(item => ({
             productId: item.id,
-            quantity: item.quantity,
-            price: item.price
+            quantity: item.quantity
           })),
-          subtotalAmount: subtotal,
-          taxAmount: taxAmount,
-          discountAmount: discountAmount,
-          totalAmount: finalTotal,
+          couponCode: couponCode ? couponCode.trim().toUpperCase() : null,
           shippingAddress: `[TRANSIT: ${shippingMethod.toUpperCase()}] ${address}`
         })
       });
@@ -92,7 +88,6 @@ export function Checkout({ user, cartItems, onPaymentSuccess, setView, onUpdateQ
           'Authorization': `Bearer ${user.token}`
         },
         body: JSON.stringify({
-          amount: finalTotal,
           orderId: orderId
         })
       });
@@ -120,10 +115,8 @@ export function Checkout({ user, cartItems, onPaymentSuccess, setView, onUpdateQ
               },
               body: JSON.stringify({
                 orderId: orderId,
-                isMock: true,
                 razorpay_order_id: rzpData.id,
-                razorpay_payment_id: `mock_pay_${Math.random().toString(36).substring(7)}`,
-                razorpay_signature: 'mock_signature'
+                razorpay_payment_id: `mock_pay_${Date.now()}`
               })
             });
 

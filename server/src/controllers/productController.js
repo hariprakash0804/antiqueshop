@@ -2,30 +2,44 @@ const { Product, User, Review } = require('../models');
 const { Op } = require('sequelize');
 const sequelize = require('../config/db');
 
+// Helper to sanitize and validate image URLs against dangerous schemes (XSS prevention)
+const isValidImageUrl = (url) => {
+  if (!url || typeof url !== 'string') return true; // optional field
+  const clean = url.trim().toLowerCase();
+  if (clean.startsWith('javascript:') || clean.startsWith('vbscript:') || clean.startsWith('data:text/html')) {
+    return false;
+  }
+  return true;
+};
+
 exports.getProducts = async (req, res) => {
-  const { category, search, sort, page, limit } = req.query;
+  const { category, search, sort, page, limit, minPrice, maxPrice } = req.query;
   const whereClause = {};
-  const pageNum = parseInt(page) || 1;
-  const pageSize = parseInt(limit) || 20;
+
+  // Cap limit between 1 and 100 to prevent DoS resource exhaustion
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const pageSize = Math.min(Math.max(1, parseInt(limit) || 20), 100);
   const offset = (pageNum - 1) * pageSize;
 
-  const { minPrice, maxPrice } = req.query;
-
-  if (category && category !== 'All') {
-    whereClause.category = category;
+  if (category && typeof category === 'string' && category !== 'All') {
+    whereClause.category = category.trim().slice(0, 100);
   }
 
-  if (search) {
+  // Escape SQL LIKE wildcards (% and _) to prevent LIKE injection DoS
+  if (search && typeof search === 'string' && search.trim()) {
+    const escapedSearch = search.trim().slice(0, 100).replace(/[%_\\]/g, '\\$&');
     whereClause[Op.or] = [
-      { title: { [Op.like]: `%${search}%` } },
-      { description: { [Op.like]: `%${search}%` } }
+      { title: { [Op.like]: `%${escapedSearch}%` } },
+      { description: { [Op.like]: `%${escapedSearch}%` } }
     ];
   }
 
   if (minPrice || maxPrice) {
     whereClause.price = {};
-    if (minPrice) whereClause.price[Op.gte] = parseFloat(minPrice);
-    if (maxPrice) whereClause.price[Op.lte] = parseFloat(maxPrice);
+    const min = parseFloat(minPrice);
+    const max = parseFloat(maxPrice);
+    if (!isNaN(min) && min >= 0) whereClause.price[Op.gte] = min;
+    if (!isNaN(max) && max >= 0) whereClause.price[Op.lte] = max;
   }
 
   // Determine sort order
@@ -48,23 +62,26 @@ exports.getProducts = async (req, res) => {
 
     // Get average ratings for these products
     const productIds = products.map(p => p.id);
-    const ratings = await Review.findAll({
-      attributes: [
-        'productId',
-        [sequelize.fn('AVG', sequelize.col('rating')), 'avgRating'],
-        [sequelize.fn('COUNT', sequelize.col('id')), 'reviewCount']
-      ],
-      where: { productId: { [Op.in]: productIds } },
-      group: ['productId']
-    });
+    let ratingMap = {};
 
-    const ratingMap = {};
-    ratings.forEach(r => {
-      ratingMap[r.productId] = {
-        avgRating: parseFloat(parseFloat(r.getDataValue('avgRating')).toFixed(1)),
-        reviewCount: parseInt(r.getDataValue('reviewCount'))
-      };
-    });
+    if (productIds.length > 0) {
+      const ratings = await Review.findAll({
+        attributes: [
+          'productId',
+          [sequelize.fn('AVG', sequelize.col('rating')), 'avgRating'],
+          [sequelize.fn('COUNT', sequelize.col('id')), 'reviewCount']
+        ],
+        where: { productId: { [Op.in]: productIds } },
+        group: ['productId']
+      });
+
+      ratings.forEach(r => {
+        ratingMap[r.productId] = {
+          avgRating: parseFloat(parseFloat(r.getDataValue('avgRating') || 0).toFixed(1)),
+          reviewCount: parseInt(r.getDataValue('reviewCount') || 0)
+        };
+      });
+    }
 
     const enrichedProducts = products.map(p => ({
       ...p.toJSON(),
@@ -82,14 +99,19 @@ exports.getProducts = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Fetch products error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Fetch products error:', error.message);
+    res.status(500).json({ message: 'Server error retrieving products' });
   }
 };
 
 exports.getProductById = async (req, res) => {
+  const productId = parseInt(req.params.id);
+  if (isNaN(productId)) {
+    return res.status(400).json({ message: 'Invalid product ID format' });
+  }
+
   try {
-    const product = await Product.findByPk(req.params.id, {
+    const product = await Product.findByPk(productId, {
       include: [
         { model: User, as: 'seller', attributes: ['id', 'name', 'email'] }
       ]
@@ -116,69 +138,122 @@ exports.getProductById = async (req, res) => {
       reviewCount: reviews.length
     });
   } catch (error) {
-    console.error('Fetch product by ID error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Fetch product by ID error:', error.message);
+    res.status(500).json({ message: 'Server error retrieving product' });
   }
 };
 
 exports.createProduct = async (req, res) => {
   const { title, description, price, imageUrl, category, stock, specifications } = req.body;
 
-  if (!title || !description || !price || !category) {
-    return res.status(400).json({ message: 'Title, description, price, and category are required' });
+  if (!title || typeof title !== 'string' || !title.trim()) {
+    return res.status(400).json({ message: 'Valid title string is required' });
+  }
+  if (!description || typeof description !== 'string' || !description.trim()) {
+    return res.status(400).json({ message: 'Valid description string is required' });
+  }
+  if (!category || typeof category !== 'string' || !category.trim()) {
+    return res.status(400).json({ message: 'Valid category string is required' });
+  }
+
+  const parsedPrice = parseFloat(price);
+  if (isNaN(parsedPrice) || parsedPrice <= 0) {
+    return res.status(400).json({ message: 'Price must be a positive number' });
+  }
+
+  const parsedStock = stock !== undefined ? parseInt(stock) : 0;
+  if (isNaN(parsedStock) || parsedStock < 0) {
+    return res.status(400).json({ message: 'Stock must be a non-negative integer' });
+  }
+
+  if (!isValidImageUrl(imageUrl)) {
+    return res.status(400).json({ message: 'Invalid image URL protocol detected' });
   }
 
   try {
     const product = await Product.create({
-      title,
-      description,
-      price,
-      imageUrl,
-      category,
-      stock: stock || 0,
+      title: title.trim().slice(0, 255),
+      description: description.trim().slice(0, 5000),
+      price: parsedPrice,
+      imageUrl: imageUrl ? imageUrl.trim().slice(0, 1000) : null,
+      category: category.trim().slice(0, 100),
+      stock: parsedStock,
       sellerId: req.user.id,
-      specifications
+      specifications: specifications ? (typeof specifications === 'object' ? JSON.stringify(specifications) : String(specifications).slice(0, 2000)) : null
     });
     res.status(201).json(product);
   } catch (error) {
-    console.error('Create product error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Create product error:', error.message);
+    res.status(500).json({ message: 'Server error creating product' });
   }
 };
 
 exports.updateProduct = async (req, res) => {
+  const productId = parseInt(req.params.id);
+  if (isNaN(productId)) {
+    return res.status(400).json({ message: 'Invalid product ID format' });
+  }
+
   try {
-    const product = await Product.findByPk(req.params.id);
+    const product = await Product.findByPk(productId);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Verify ownership or admin privileges
+    // Verify ownership or admin privileges (BOLA / IDOR defense)
     if (product.sellerId !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to edit this product' });
     }
 
     const { title, description, price, imageUrl, category, stock, specifications } = req.body;
-    await product.update({
-      title: title || product.title,
-      description: description || product.description,
-      price: price || product.price,
-      imageUrl: imageUrl || product.imageUrl,
-      category: category || product.category,
-      stock: stock !== undefined ? stock : product.stock,
-      specifications: specifications !== undefined ? specifications : product.specifications
-    });
 
+    const updates = {};
+    if (title !== undefined) {
+      if (typeof title !== 'string' || !title.trim()) return res.status(400).json({ message: 'Title cannot be empty' });
+      updates.title = title.trim().slice(0, 255);
+    }
+    if (description !== undefined) {
+      if (typeof description !== 'string' || !description.trim()) return res.status(400).json({ message: 'Description cannot be empty' });
+      updates.description = description.trim().slice(0, 5000);
+    }
+    if (price !== undefined) {
+      const parsedPrice = parseFloat(price);
+      if (isNaN(parsedPrice) || parsedPrice <= 0) return res.status(400).json({ message: 'Price must be a positive number' });
+      updates.price = parsedPrice;
+    }
+    if (imageUrl !== undefined) {
+      if (!isValidImageUrl(imageUrl)) return res.status(400).json({ message: 'Invalid image URL protocol detected' });
+      updates.imageUrl = imageUrl ? imageUrl.trim().slice(0, 1000) : null;
+    }
+    if (category !== undefined) {
+      if (typeof category !== 'string' || !category.trim()) return res.status(400).json({ message: 'Category cannot be empty' });
+      updates.category = category.trim().slice(0, 100);
+    }
+    if (stock !== undefined) {
+      const parsedStock = parseInt(stock);
+      if (isNaN(parsedStock) || parsedStock < 0) return res.status(400).json({ message: 'Stock must be a non-negative integer' });
+      updates.stock = parsedStock;
+    }
+    if (specifications !== undefined) {
+      updates.specifications = specifications ? (typeof specifications === 'object' ? JSON.stringify(specifications) : String(specifications).slice(0, 2000)) : null;
+    }
+
+    await product.update(updates);
     res.json(product);
   } catch (error) {
-    console.error('Update product error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Update product error:', error.message);
+    res.status(500).json({ message: 'Server error updating product' });
   }
 };
 
 exports.deleteProduct = async (req, res) => {
+  const productId = parseInt(req.params.id);
+  if (isNaN(productId)) {
+    return res.status(400).json({ message: 'Invalid product ID format' });
+  }
+
   try {
-    const product = await Product.findByPk(req.params.id);
+    const product = await Product.findByPk(productId);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
@@ -191,7 +266,7 @@ exports.deleteProduct = async (req, res) => {
     await product.destroy();
     res.json({ message: 'Product deleted successfully' });
   } catch (error) {
-    console.error('Delete product error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Delete product error:', error.message);
+    res.status(500).json({ message: 'Server error deleting product' });
   }
 };

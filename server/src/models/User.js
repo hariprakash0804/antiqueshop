@@ -39,6 +39,11 @@ const User = sequelize.define('User', {
     type: DataTypes.ENUM('customer', 'seller', 'order_manager', 'admin'),
     defaultValue: 'customer',
     allowNull: false
+  },
+  tokenVersion: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    allowNull: false
   }
 }, {
   timestamps: true

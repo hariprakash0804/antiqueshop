@@ -19,37 +19,68 @@ const couponRoutes = require('./routes/couponRoutes');
 
 const app = express();
 
-// Trust proxy headers (X-Forwarded-For) in deployed environments (e.g. Render/Vercel)
-app.set('trust proxy', true);
+// Disable X-Powered-By header to prevent technology disclosure
+app.disable('x-powered-by');
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Security Headers Middleware (Session Hijack, XSS, Clickjacking, MIME-sniffing protection)
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; img-src 'self' data: https: blob:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https: data:; script-src 'self' 'unsafe-inline' https:; connect-src 'self' https:;"
+  );
+  next();
+});
 
-// Rate limiting for auth endpoints
-let authAttempts = {};
+// Configure CORS securely
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400
+};
+app.use(cors(corsOptions));
+
+// Body parsers with payload bounds
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Resilient Rate Limiter against IP spoofing for auth endpoints
+const authAttempts = new Map();
 const rateLimiter = (req, res, next) => {
-  // Resolve original client IP behind reverse proxies/load balancers
-  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.ip;
+  // Use Express standard IP resolution without trusting unverified spoofed headers
+  const ip = req.ip || req.socket?.remoteAddress || '127.0.0.1';
   const now = Date.now();
-  if (!authAttempts[ip]) authAttempts[ip] = [];
-  // Remove entries older than 15 minutes
-  authAttempts[ip] = authAttempts[ip].filter(t => now - t < 900000);
-  if (authAttempts[ip].length >= 100) {
-    return res.status(429).json({ message: 'Too many authentication attempts. Please try again in 15 minutes.' });
+  const attempts = (authAttempts.get(ip) || []).filter(t => now - t < 900000); // 15 mins window
+
+  if (attempts.length >= 30) {
+    return res.status(429).json({ 
+      message: 'Excessive security verification attempts. Access temporarily throttled for 15 minutes.' 
+    });
   }
-  authAttempts[ip].push(now);
+
+  attempts.push(now);
+  authAttempts.set(ip, attempts);
   next();
 };
 
-// Cleanup rate limiter memory every 30 minutes
+// Periodic cleanup of rate limiter memory every 15 minutes
 setInterval(() => {
   const now = Date.now();
-  Object.keys(authAttempts).forEach(ip => {
-    authAttempts[ip] = authAttempts[ip].filter(t => now - t < 900000);
-    if (authAttempts[ip].length === 0) delete authAttempts[ip];
-  });
-}, 1800000);
+  for (const [ip, timestamps] of authAttempts.entries()) {
+    const valid = timestamps.filter(t => now - t < 900000);
+    if (valid.length === 0) {
+      authAttempts.delete(ip);
+    } else {
+      authAttempts.set(ip, valid);
+    }
+  }
+}, 900000);
 
 // API Routes
 app.use('/api/auth', rateLimiter, authRoutes);
@@ -63,7 +94,17 @@ app.use('/api/coupons', couponRoutes);
 
 // Root route
 app.get('/', (req, res) => {
-  res.json({ message: 'Futuristic Antique E-Commerce API is running...' });
+  res.json({ message: 'Futuristic Antique E-Commerce API is running securely...' });
+});
+
+// Centralized sanitized error handling middleware
+app.use((err, req, res, next) => {
+  console.error('[SERVER ERROR]', err.message);
+  res.status(err.status || 500).json({ 
+    message: process.env.NODE_ENV === 'production' 
+      ? 'An internal error occurred. Please contact system administrator.' 
+      : (err.message || 'Server error')
+  });
 });
 
 // Database Sync & Server Start
@@ -93,9 +134,10 @@ const startServer = async () => {
 
     try {
       const connection = await mysql.createConnection(connectionOptions);
-      await connection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\`;`);
+      const safeDbName = (process.env.DB_NAME || 'antique_shop').replace(/`/g, '``');
+      await connection.query(`CREATE DATABASE IF NOT EXISTS \`${safeDbName}\`;`);
       await connection.end();
-      console.log(`Database '${process.env.DB_NAME}' verified/created.`);
+      console.log(`Database '${safeDbName}' verified/created.`);
     } catch (dbError) {
       console.warn(`[DATABASE WARNING] Could not verify/create database automatically: ${dbError.message}. Relying on existing schema connection.`);
     }
@@ -108,10 +150,10 @@ const startServer = async () => {
     await sequelize.sync();
     console.log('Database models synchronized.');
     app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+      console.log(`Server is running securely on port ${PORT}`);
     });
   } catch (error) {
-    console.error('Unable to connect to database or start server:', error);
+    console.error('Unable to connect to database or start server:', error.message);
     process.exit(1);
   }
 };

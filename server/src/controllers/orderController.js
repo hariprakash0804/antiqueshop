@@ -1,46 +1,101 @@
-const { Order, OrderItem, Product, User } = require('../models');
+const { Order, OrderItem, Product, User, Coupon, Setting } = require('../models');
+const sequelize = require('../config/db');
 
 exports.createOrder = async (req, res) => {
-  const { items, subtotalAmount, taxAmount, discountAmount, totalAmount, shippingAddress } = req.body;
+  const { items, shippingAddress, couponCode } = req.body;
 
-  if (!items || items.length === 0) {
-    return res.status(400).json({ message: 'No items in order' });
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ message: 'No items provided in order acquisition queue' });
   }
 
+  if (!shippingAddress || typeof shippingAddress !== 'string' || !shippingAddress.trim()) {
+    return res.status(400).json({ message: 'A valid shipping destination address is required' });
+  }
+
+  const t = await sequelize.transaction();
+
   try {
-    // 1. Verify stock availability for all items in sequence
+    let subtotal = 0;
+    const verifiedItems = [];
+
+    // 1. Authoritatively verify stock and compute true price from database records
     for (const item of items) {
-      const prod = await Product.findByPk(item.productId);
-      if (!prod) {
-        return res.status(404).json({ message: `Product with ID ${item.productId} not found` });
+      const productId = parseInt(item.productId);
+      const quantity = parseInt(item.quantity);
+
+      if (isNaN(productId) || isNaN(quantity) || quantity <= 0) {
+        await t.rollback();
+        return res.status(400).json({ message: 'Invalid item product ID or quantity format' });
       }
-      if (prod.stock < item.quantity) {
+
+      const prod = await Product.findByPk(productId, { transaction: t });
+      if (!prod) {
+        await t.rollback();
+        return res.status(404).json({ message: `Product with ID ${productId} not found` });
+      }
+      if (prod.stock < quantity) {
+        await t.rollback();
         return res.status(400).json({ message: `Insufficient stock for product: ${prod.title}. Available: ${prod.stock}` });
+      }
+
+      const unitPrice = parseFloat(prod.price);
+      subtotal += unitPrice * quantity;
+
+      verifiedItems.push({
+        productId: prod.id,
+        quantity,
+        price: unitPrice
+      });
+    }
+
+    // 2. Authoritatively validate and apply coupon discount if provided
+    let discountAmount = 0;
+    if (couponCode && typeof couponCode === 'string' && couponCode.trim()) {
+      const cleanCouponCode = couponCode.trim().toUpperCase();
+      const coupon = await Coupon.findOne({ where: { code: cleanCouponCode }, transaction: t });
+      if (coupon && coupon.discount > 0) {
+        discountAmount = parseFloat(((subtotal * coupon.discount) / 100).toFixed(2));
       }
     }
 
-    // Create the Order in Pending status
+    // 3. Authoritatively compute shipping fee from transit method
+    let shippingFee = 0;
+    const cleanAddress = shippingAddress.trim().slice(0, 1000);
+    if (cleanAddress.toUpperCase().includes('ORBITAL')) {
+      shippingFee = 2500;
+    } else if (cleanAddress.toUpperCase().includes('ESCORT')) {
+      shippingFee = 9500;
+    }
+
+    // 4. Authoritatively fetch tax rate and compute tax & total amount
+    const taxSetting = await Setting.findOne({ where: { key: 'tax_rate' }, transaction: t });
+    const taxRate = taxSetting ? parseFloat(taxSetting.value) : 18.0;
+    const taxableBase = Math.max(0, subtotal - discountAmount + shippingFee);
+    const taxAmount = parseFloat(((taxableBase * taxRate) / 100).toFixed(2));
+    const totalAmount = parseFloat((taxableBase + taxAmount).toFixed(2));
+
+    // 5. Create Order in Pending status
     const order = await Order.create({
       userId: req.user.id,
-      subtotalAmount: subtotalAmount || 0,
-      taxAmount: taxAmount || 0,
-      discountAmount: discountAmount || 0,
+      subtotalAmount: parseFloat(subtotal.toFixed(2)),
+      taxAmount,
+      discountAmount,
       totalAmount,
-      shippingAddress,
+      shippingAddress: cleanAddress,
       status: 'Pending'
-    });
+    }, { transaction: t });
 
-    // Create OrderItems records
-    const orderItemPromises = items.map(item => {
-      return OrderItem.create({
+    // 6. Create OrderItem records with authentic verified prices
+    for (const vItem of verifiedItems) {
+      await OrderItem.create({
         orderId: order.id,
-        productId: item.productId,
-        quantity: item.quantity,
-        price: item.price
-      });
-    });
+        productId: vItem.productId,
+        quantity: vItem.quantity,
+        price: vItem.price
+      }, { transaction: t });
+    }
 
-    await Promise.all(orderItemPromises);
+    await t.commit();
 
     const fullOrder = await Order.findByPk(order.id, {
       include: [
@@ -59,8 +114,9 @@ exports.createOrder = async (req, res) => {
 
     res.status(201).json(fullOrder);
   } catch (error) {
-    console.error('Create order error:', error);
-    res.status(500).json({ message: 'Server error' });
+    await t.rollback();
+    console.error('Create order error:', error.message);
+    res.status(500).json({ message: 'Server error initializing order' });
   }
 };
 
@@ -71,7 +127,6 @@ exports.getOrders = async (req, res) => {
     let orders;
 
     if (role === 'admin' || role === 'order_manager') {
-      // Admins and Order Managers see all orders
       orders = await Order.findAll({
         include: [
           {
@@ -88,7 +143,6 @@ exports.getOrders = async (req, res) => {
         order: [['createdAt', 'DESC']]
       });
     } else if (role === 'seller') {
-      // Sellers see orders containing their products
       const orderItems = await OrderItem.findAll({
         include: [
           {
@@ -104,7 +158,6 @@ exports.getOrders = async (req, res) => {
         ]
       });
 
-      // Group order items by order ID
       const orderMap = {};
       orderItems.forEach(oi => {
         if (oi.order) {
@@ -127,7 +180,6 @@ exports.getOrders = async (req, res) => {
 
       orders = Object.values(orderMap).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     } else {
-      // Customers see their own orders
       orders = await Order.findAll({
         where: { userId: req.user.id },
         include: [
@@ -148,8 +200,8 @@ exports.getOrders = async (req, res) => {
 
     res.json(orders);
   } catch (error) {
-    console.error('Fetch orders error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Fetch orders error:', error.message);
+    res.status(500).json({ message: 'Server error retrieving orders' });
   }
 };
 
@@ -158,62 +210,110 @@ exports.updateOrderStatus = async (req, res) => {
   const validStatuses = ['Pending', 'Paid', 'Shipped', 'Delivered', 'Cancelled', 'Refunded'];
 
   if (!validStatuses.includes(status)) {
-    return res.status(400).json({ message: 'Invalid status' });
+    return res.status(400).json({ message: 'Invalid status provided' });
   }
 
+  const t = await sequelize.transaction();
+
   try {
-    const order = await Order.findByPk(req.params.id);
+    const order = await Order.findByPk(req.params.id, {
+      include: [{ model: OrderItem, as: 'items' }],
+      transaction: t
+    });
+
     if (!order) {
+      await t.rollback();
       return res.status(404).json({ message: 'Order not found' });
     }
 
     // Rule: once an order status is changed to delivered, it cannot be changed to any other status
     if (order.status === 'Delivered') {
+      await t.rollback();
       return res.status(400).json({ message: 'Delivered orders are finalized and cannot be shifted to any other state.' });
     }
 
     // Rule: when cancelled, the status can be changed only to refunded
     if (order.status === 'Cancelled' && status !== 'Refunded') {
+      await t.rollback();
       return res.status(400).json({ message: 'Cancelled orders can only transition to Refunded.' });
     }
 
     // Checking authorizations
-    // Sellers can mark their orders shipped, but only Order Managers and Admins can perform full state shifts
     if (req.user.role === 'seller' && (status === 'Cancelled' || status === 'Refunded')) {
+      await t.rollback();
       return res.status(403).json({ message: 'Sellers cannot cancel or refund orders globally' });
+    }
+
+    // Stock Restoration Guard: If order was Paid/Shipped and is being Cancelled/Refunded, replenish stock
+    if (['Paid', 'Shipped'].includes(order.status) && ['Cancelled', 'Refunded'].includes(status)) {
+      if (order.items && order.items.length > 0) {
+        for (const item of order.items) {
+          const prod = await Product.findByPk(item.productId, { transaction: t });
+          if (prod) {
+            await prod.update({ stock: prod.stock + item.quantity }, { transaction: t });
+          }
+        }
+      }
     }
 
     const updateData = { status };
     if (notes !== undefined) {
-      updateData.notes = notes;
+      updateData.notes = typeof notes === 'string' ? notes.slice(0, 1000) : null;
     }
 
-    await order.update(updateData);
+    await order.update(updateData, { transaction: t });
+    await t.commit();
+
     res.json(order);
   } catch (error) {
-    console.error('Update status error:', error);
-    res.status(500).json({ message: 'Server error' });
+    await t.rollback();
+    console.error('Update status error:', error.message);
+    res.status(500).json({ message: 'Server error updating order status' });
   }
 };
 
 exports.requestCancellation = async (req, res) => {
+  const t = await sequelize.transaction();
+
   try {
-    const order = await Order.findByPk(req.params.id);
+    const order = await Order.findByPk(req.params.id, {
+      include: [{ model: OrderItem, as: 'items' }],
+      transaction: t
+    });
+
     if (!order) {
+      await t.rollback();
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // Verify it is the user's order
+    // Verify it is the user's order or authorized admin/order_manager (BOLA / IDOR protection)
     if (order.userId !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'order_manager') {
-      return res.status(403).json({ message: 'Unauthorized' });
+      await t.rollback();
+      return res.status(403).json({ message: 'Unauthorized to cancel this order' });
     }
 
-    // Cancel order
-    // If order was Paid, setting it to Cancelled triggers Order Manager's refund dashboard alert
-    await order.update({ status: 'Cancelled' });
+    if (order.status === 'Delivered' || order.status === 'Cancelled' || order.status === 'Refunded') {
+      await t.rollback();
+      return res.status(400).json({ message: `Cannot cancel an order in ${order.status} state` });
+    }
+
+    // Restore stock if the order was already Paid
+    if (order.status === 'Paid' && order.items && order.items.length > 0) {
+      for (const item of order.items) {
+        const prod = await Product.findByPk(item.productId, { transaction: t });
+        if (prod) {
+          await prod.update({ stock: prod.stock + item.quantity }, { transaction: t });
+        }
+      }
+    }
+
+    await order.update({ status: 'Cancelled' }, { transaction: t });
+    await t.commit();
+
     res.json({ message: 'Order successfully cancelled', order });
   } catch (error) {
-    console.error('Cancel request error:', error);
-    res.status(500).json({ message: 'Server error' });
+    await t.rollback();
+    console.error('Cancel request error:', error.message);
+    res.status(500).json({ message: 'Server error cancelling order' });
   }
 };
