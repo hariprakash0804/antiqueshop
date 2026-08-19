@@ -459,6 +459,7 @@ export function SellerDashboard({ user }) {
   const [spec1, setSpec1] = useState('');
   const [spec2, setSpec2] = useState('');
   const [formError, setFormError] = useState('');
+  const [productErrors, setProductErrors] = useState({});
   const [formLoading, setFormLoading] = useState(false);
 
   useEffect(() => {
@@ -489,19 +490,65 @@ export function SellerDashboard({ user }) {
     }
   };
 
+  const validateProductForm = () => {
+    const errs = {};
+    if (!title.trim()) {
+      errs.title = 'Product title is required';
+    } else if (title.trim().length < 3) {
+      errs.title = 'Title must be at least 3 characters';
+    } else if (title.trim().length > 100) {
+      errs.title = 'Title cannot exceed 100 characters';
+    }
+
+    const parsedPrice = parseFloat(price);
+    if (!price || isNaN(parsedPrice) || parsedPrice <= 0) {
+      errs.price = 'Please enter a valid positive valuation price (e.g. 45000)';
+    } else if (parsedPrice > 100000000) {
+      errs.price = 'Price exceeds maximum permissible threshold';
+    }
+
+    const parsedStock = parseInt(stock);
+    if (stock === '' || isNaN(parsedStock) || parsedStock < 0) {
+      errs.stock = 'Stock must be a non-negative integer (0 or more)';
+    }
+
+    if (!imageUrl.trim()) {
+      errs.imageUrl = 'At least one image URL or synthesized hologram is required';
+    } else {
+      const cleanUrl = imageUrl.trim().toLowerCase();
+      if (cleanUrl.startsWith('javascript:') || cleanUrl.startsWith('vbscript:')) {
+        errs.imageUrl = 'Dangerous URL protocol detected';
+      }
+    }
+
+    if (!description.trim()) {
+      errs.description = 'Comprehensive description is required';
+    } else if (description.trim().length < 10) {
+      errs.description = 'Description must be at least 10 characters';
+    }
+
+    setProductErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
   const handleProductSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
+
+    if (!validateProductForm()) {
+      return;
+    }
+
     setFormLoading(true);
 
     const payload = {
-      title,
-      description,
+      title: title.trim(),
+      description: description.trim(),
       price: parseFloat(price),
       category,
       stock: parseInt(stock),
-      imageUrl,
-      specifications: JSON.stringify({ spec1, spec2 })
+      imageUrl: imageUrl.trim(),
+      specifications: JSON.stringify({ spec1: spec1.trim(), spec2: spec2.trim() })
     };
 
     try {
@@ -923,25 +970,38 @@ export function SellerDashboard({ user }) {
 
           {/* Add / Edit Form */}
           {viewTab === 'add' && (
-            <form onSubmit={handleProductSubmit} className="max-w-xl mx-auto glass-panel p-8 rounded-3xl border border-zinc-900 space-y-5">
+            <form onSubmit={handleProductSubmit} noValidate className="max-w-xl mx-auto glass-panel p-8 rounded-3xl border border-zinc-900 space-y-5">
               <h3 className="text-sm font-display font-bold text-cyber-gold tracking-widest border-b border-zinc-900 pb-3">
                 {editMode ? 'MODIFY ITEM VIRTUAL REGISTRY' : 'LIST NEW UNIQUE ITEM'}
               </h3>
 
               {formError && (
-                <div className="p-3 bg-red-950/40 border border-red-500/50 text-red-400 text-xs rounded-xl font-mono text-center">
+                <div className="p-3 bg-red-950/40 border border-red-500/50 text-red-400 text-xs rounded-xl font-mono text-center animate-shake">
                   ERROR: {formError.toUpperCase()}
                 </div>
               )}
 
               <div className="space-y-1">
-                <label className="block text-[10px] font-display text-gray-400">PRODUCT TITLE</label>
+                <label className="block text-[10px] font-display text-gray-400">
+                  PRODUCT TITLE <span className="text-cyber-gold">*</span>
+                </label>
                 <input 
-                  type="text" required
-                  value={title} onChange={(e) => setTitle(e.target.value)}
+                  type="text"
+                  value={title} 
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    if (productErrors.title && e.target.value.trim().length >= 3) {
+                      setProductErrors(prev => ({ ...prev, title: undefined }));
+                    }
+                  }}
                   placeholder="e.g. Victorian Sovereign Ring"
-                  className="w-full bg-black/60 border border-zinc-800 focus:border-cyber-gold focus:outline-none rounded-xl p-3 text-sm font-mono placeholder-zinc-800 text-white"
+                  className={`w-full bg-black/60 border rounded-xl p-3 text-sm font-mono placeholder-zinc-800 text-white ${
+                    productErrors.title ? 'border-red-500/80 bg-red-950/20' : 'border-zinc-800 focus:border-cyber-gold'
+                  } focus:outline-none`}
                 />
+                {productErrors.title && (
+                  <p className="text-[10px] text-red-400 font-mono">✕ {productErrors.title}</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -958,13 +1018,26 @@ export function SellerDashboard({ user }) {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-display text-gray-400">ESTIMATED VALUATION (INR)</label>
+                  <label className="block text-[10px] font-display text-gray-400">
+                    ESTIMATED VALUATION (INR) <span className="text-cyber-gold">*</span>
+                  </label>
                   <input 
-                    type="number" required step="0.01"
-                    value={price} onChange={(e) => setPrice(e.target.value)}
+                    type="number" step="0.01"
+                    value={price} 
+                    onChange={(e) => {
+                      setPrice(e.target.value);
+                      if (productErrors.price && parseFloat(e.target.value) > 0) {
+                        setProductErrors(prev => ({ ...prev, price: undefined }));
+                      }
+                    }}
                     placeholder="e.g. 50000"
-                    className="w-full bg-black/60 border border-zinc-800 focus:border-cyber-gold focus:outline-none rounded-xl p-3 text-sm font-mono placeholder-zinc-800 text-white"
+                    className={`w-full bg-black/60 border rounded-xl p-3 text-sm font-mono placeholder-zinc-800 text-white ${
+                      productErrors.price ? 'border-red-500/80 bg-red-950/20' : 'border-zinc-800 focus:border-cyber-gold'
+                    } focus:outline-none`}
                   />
+                  {productErrors.price && (
+                    <p className="text-[10px] text-red-400 font-mono">✕ {productErrors.price}</p>
+                  )}
                 </div>
               </div>
 
@@ -992,17 +1065,32 @@ export function SellerDashboard({ user }) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-display text-gray-400">INITIAL AVAILABILITY STOCK</label>
+                  <label className="block text-[10px] font-display text-gray-400">
+                    INITIAL AVAILABILITY STOCK <span className="text-cyber-gold">*</span>
+                  </label>
                   <input 
-                    type="number" required
-                    value={stock} onChange={(e) => setStock(e.target.value)}
+                    type="number"
+                    value={stock} 
+                    onChange={(e) => {
+                      setStock(e.target.value);
+                      if (productErrors.stock && parseInt(e.target.value) >= 0) {
+                        setProductErrors(prev => ({ ...prev, stock: undefined }));
+                      }
+                    }}
                     placeholder="1"
-                    className="w-full bg-black/60 border border-zinc-800 focus:border-cyber-gold focus:outline-none rounded-xl p-3 text-sm font-mono placeholder-zinc-800 text-white"
+                    className={`w-full bg-black/60 border rounded-xl p-3 text-sm font-mono placeholder-zinc-800 text-white ${
+                      productErrors.stock ? 'border-red-500/80 bg-red-950/20' : 'border-zinc-800 focus:border-cyber-gold'
+                    } focus:outline-none`}
                   />
+                  {productErrors.stock && (
+                    <p className="text-[10px] text-red-400 font-mono">✕ {productErrors.stock}</p>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between items-center">
-                    <label className="block text-[10px] font-display text-gray-400">HOLOGRAPHIC IMAGE URL</label>
+                    <label className="block text-[10px] font-display text-gray-400">
+                      HOLOGRAPHIC IMAGE URL <span className="text-cyber-gold">*</span>
+                    </label>
                     <button
                       type="button"
                       onClick={() => {
@@ -1022,6 +1110,7 @@ export function SellerDashboard({ user }) {
                             url = 'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?q=80&w=400';
                           }
                           setImageUrl(url);
+                          setProductErrors(prev => ({ ...prev, imageUrl: undefined }));
                           toast.success("✦ HOLOGRAM MOLECULAR SYNTHESIS COMPLETED.");
                         }, 1200);
                       }}
@@ -1031,23 +1120,47 @@ export function SellerDashboard({ user }) {
                     </button>
                   </div>
                   <input 
-                    type="text" required
-                    value={imageUrl} onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://image-url.com, https://another-image.com"
-                    className="w-full bg-black/60 border border-zinc-800 focus:border-cyber-gold focus:outline-none rounded-xl p-3 text-sm font-mono placeholder-zinc-800 text-white"
+                    type="text"
+                    value={imageUrl} 
+                    onChange={(e) => {
+                      setImageUrl(e.target.value);
+                      if (productErrors.imageUrl && e.target.value.trim()) {
+                        setProductErrors(prev => ({ ...prev, imageUrl: undefined }));
+                      }
+                    }}
+                    placeholder="https://images.unsplash.com/..."
+                    className={`w-full bg-black/60 border rounded-xl p-3 text-sm font-mono placeholder-zinc-800 text-white ${
+                      productErrors.imageUrl ? 'border-red-500/80 bg-red-950/20' : 'border-zinc-800 focus:border-cyber-gold'
+                    } focus:outline-none`}
                   />
+                  {productErrors.imageUrl && (
+                    <p className="text-[10px] text-red-400 font-mono">✕ {productErrors.imageUrl}</p>
+                  )}
                   <p className="text-[8px] text-zinc-500 font-mono mt-0.5">Separate multiple URLs with commas for a slider gallery</p>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[10px] font-display text-gray-400">ARTIFACT COMPREHENSIVE DESCRIPTION</label>
+                <label className="block text-[10px] font-display text-gray-400">
+                  ARTIFACT COMPREHENSIVE DESCRIPTION <span className="text-cyber-gold">*</span>
+                </label>
                 <textarea 
-                  required rows={4}
-                  value={description} onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Include historical origins, verification details, carbon dimensions..."
-                  className="w-full bg-black/60 border border-zinc-800 focus:border-cyber-gold focus:outline-none rounded-xl p-3 text-sm font-mono placeholder-zinc-800 text-white"
+                  rows={4}
+                  value={description} 
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    if (productErrors.description && e.target.value.trim().length >= 10) {
+                      setProductErrors(prev => ({ ...prev, description: undefined }));
+                    }
+                  }}
+                  placeholder="Include historical origins, verification details, carbon dimensions (min 10 chars)..."
+                  className={`w-full bg-black/60 border rounded-xl p-3 text-sm font-mono placeholder-zinc-800 text-white ${
+                    productErrors.description ? 'border-red-500/80 bg-red-950/20' : 'border-zinc-800 focus:border-cyber-gold'
+                  } focus:outline-none`}
                 />
+                {productErrors.description && (
+                  <p className="text-[10px] text-red-400 font-mono">✕ {productErrors.description}</p>
+                )}
               </div>
 
               <div className="pt-2 flex gap-4">
@@ -1059,7 +1172,7 @@ export function SellerDashboard({ user }) {
                 </button>
                 <button 
                   type="submit" disabled={formLoading}
-                  className="w-1/2 py-3 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 hover:from-yellow-600 hover:to-cyber-gold text-black font-display font-bold text-xs"
+                  className="w-1/2 py-3 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 hover:from-yellow-600 hover:to-cyber-gold text-black font-display font-bold text-xs shadow-gold-glow"
                 >
                   {formLoading ? 'STORING TO CHAIN...' : editMode ? 'UPDATE LISTING' : 'BROADCAST LISTING'}
                 </button>
@@ -1821,28 +1934,36 @@ export function AdminDashboard({ user }) {
             <form 
               onSubmit={(e) => {
                 e.preventDefault();
-                const code = e.target.elements.code.value.trim().toUpperCase();
-                const discount = parseInt(e.target.elements.discount.value);
-                if (!code || isNaN(discount) || discount < 1 || discount > 100) {
-                  toast.error('Invalid code input or discount range.');
+                const codeInput = e.target.elements.code;
+                const discountInput = e.target.elements.discount;
+                const code = codeInput.value.trim().toUpperCase();
+                const discount = parseInt(discountInput.value);
+
+                if (!code || !/^[A-Z0-9_-]{3,20}$/.test(code)) {
+                  toast.error('Coupon code must be 3-20 uppercase alphanumeric characters (e.g. SUMMER25).');
+                  return;
+                }
+                if (isNaN(discount) || discount < 1 || discount > 100) {
+                  toast.error('Discount percentage must be an integer between 1 and 100.');
                   return;
                 }
                 handleAddCoupon(code, discount);
                 e.target.reset();
               }}
+              noValidate
               className="flex flex-col sm:flex-row gap-3 pt-2"
             >
               <input 
-                name="code" type="text" placeholder="NEW PROMO CODE..." required
-                className="flex-1 bg-black border border-zinc-800 text-xs font-mono rounded-xl p-3 focus:outline-none placeholder-zinc-500 text-white"
+                name="code" type="text" placeholder="NEW PROMO CODE (e.g. TITAN25)..." required
+                className="flex-1 bg-black border border-zinc-800 text-xs font-mono rounded-xl p-3 focus:outline-none focus:border-cyber-gold placeholder-zinc-700 text-white"
               />
               <input 
-                name="discount" type="number" min="1" max="100" placeholder="DISCOUNT %..." required
-                className="w-full sm:w-32 bg-black border border-zinc-800 text-xs font-mono rounded-xl p-3 focus:outline-none placeholder-zinc-500 text-white"
+                name="discount" type="number" min="1" max="100" placeholder="DISCOUNT (1-100)%..." required
+                className="w-full sm:w-36 bg-black border border-zinc-800 text-xs font-mono rounded-xl p-3 focus:outline-none focus:border-cyber-gold placeholder-zinc-700 text-white"
               />
               <button 
                 type="submit"
-                className="px-5 py-3 bg-cyber-gold hover:bg-yellow-650 text-black font-display font-extrabold text-[10px] tracking-widest rounded-xl transition-all"
+                className="px-5 py-3 bg-cyber-gold hover:bg-yellow-600 text-black font-display font-extrabold text-[10px] tracking-widest rounded-xl transition-all shadow-gold-glow"
               >
                 GENERATE PROMO
               </button>
@@ -1862,11 +1983,12 @@ export function AdminDashboard({ user }) {
                 e.preventDefault();
                 const newRate = parseFloat(e.target.elements.taxRate.value);
                 if (isNaN(newRate) || newRate < 0 || newRate > 100) {
-                  toast.error('Tax rate must be a valid number between 0 and 100.');
+                  toast.error('Tax rate must be a valid number between 0% and 100%.');
                   return;
                 }
                 handleUpdateTaxRate(newRate);
               }}
+              noValidate
               className="flex flex-col sm:flex-row gap-3 pt-2 items-center max-w-md"
             >
               <div className="relative flex-1 w-full">
@@ -1880,13 +2002,13 @@ export function AdminDashboard({ user }) {
                   defaultValue={taxRateSetting} 
                   required
                   placeholder="EXCISE TAX RATE %..."
-                  className="w-full bg-black border border-zinc-800 text-xs font-mono rounded-xl p-3 focus:outline-none placeholder-zinc-500 text-white pr-8"
+                  className="w-full bg-black border border-zinc-800 text-xs font-mono rounded-xl p-3 focus:outline-none focus:border-cyber-cyan placeholder-zinc-700 text-white pr-8"
                 />
                 <span className="absolute right-3 top-3 text-xs font-mono text-zinc-500">%</span>
               </div>
               <button 
                 type="submit"
-                className="w-full sm:w-auto px-5 py-3 bg-cyber-cyan hover:bg-cyan-600 text-black font-display font-extrabold text-[10px] tracking-widest rounded-xl transition-all"
+                className="w-full sm:w-auto px-5 py-3 bg-cyber-cyan hover:bg-cyan-600 text-black font-display font-extrabold text-[10px] tracking-widest rounded-xl transition-all shadow-cyan-glow"
               >
                 UPDATE TAX PROTOCOL
               </button>

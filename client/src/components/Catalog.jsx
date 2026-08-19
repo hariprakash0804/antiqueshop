@@ -32,6 +32,7 @@ function ReviewModal({ product, user, onClose }) {
   const [newComment, setNewComment] = useState('');
   const [newImageUrl, setNewImageUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState('');
 
   useEffect(() => {
     fetchReviews();
@@ -52,10 +53,33 @@ function ReviewModal({ product, user, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setReviewError('');
+
     if (!user) {
       toast.warning('Please log in to submit a review');
       return;
     }
+
+    if (!newRating || newRating < 1 || newRating > 5) {
+      setReviewError('Please select a star rating between 1 and 5.');
+      return;
+    }
+
+    if (!newComment.trim()) {
+      setReviewError('Review commentary cannot be empty.');
+      return;
+    }
+
+    if (newComment.trim().length < 4) {
+      setReviewError('Please provide at least 4 characters in your review commentary.');
+      return;
+    }
+
+    if (newComment.trim().length > 1000) {
+      setReviewError('Review cannot exceed 1000 characters.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch(`${API_BASE}/api/reviews`, {
@@ -64,15 +88,22 @@ function ReviewModal({ product, user, onClose }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${user.token}`
         },
-        body: JSON.stringify({ productId: product.id, rating: newRating, comment: newComment, imageUrl: newImageUrl })
+        body: JSON.stringify({ 
+          productId: product.id, 
+          rating: newRating, 
+          comment: newComment.trim(), 
+          imageUrl: newImageUrl || null 
+        })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-      toast.success('Review submitted successfully');
+      if (!res.ok) throw new Error(data.message || 'Review failed to submit');
+      toast.success('Review authenticated and recorded.');
       setNewComment('');
       setNewImageUrl('');
+      setReviewError('');
       fetchReviews();
     } catch (err) {
+      setReviewError(err.message);
       toast.error(err.message);
     } finally {
       setSubmitting(false);
@@ -99,29 +130,30 @@ function ReviewModal({ product, user, onClose }) {
               <span className="text-sm font-display font-bold text-cyber-gold">{avgRating}</span>
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-cyber-gold font-display text-lg">[X]</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-cyber-gold text-lg font-display">
+            [X]
+          </button>
         </div>
 
-        {/* Reviews list */}
+        {/* Reviews List */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          
-          {/* Ratings distribution visual breakdown */}
-          {!loading && totalReviews > 0 && (
-            <div className="p-4 rounded-2xl bg-black/60 border border-zinc-900/60 space-y-2 mb-2 font-mono text-[10px]">
-              <span className="text-[8px] font-display text-cyber-gold tracking-widest block mb-1">RATING DISTRIBUTION LOGS:</span>
-              {[5, 4, 3, 2, 1].map(star => {
-                const count = ratingCounts[star];
-                const percent = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+          {/* Rating Breakdown Bar */}
+          {totalReviews > 0 && (
+            <div className="p-4 bg-black/40 rounded-2xl border border-zinc-900 space-y-2 mb-6">
+              <div className="text-xs font-display text-cyber-cyan tracking-wider font-bold">RATING DISTRIBUTION</div>
+              {[5, 4, 3, 2, 1].map(stars => {
+                const count = ratingCounts[stars] || 0;
+                const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
                 return (
-                  <div key={star} className="flex items-center gap-3">
-                    <span className="w-12 text-zinc-500 uppercase">{star} STARS</span>
-                    <div className="flex-1 h-1.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-900">
+                  <div key={stars} className="flex items-center gap-3 text-xs font-mono">
+                    <span className="w-12 text-zinc-500">{stars} ★</span>
+                    <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                       <div 
-                        style={{ width: `${percent}%` }}
-                        className="h-full bg-cyber-gold rounded-full"
+                        className="h-full bg-cyber-gold rounded-full transition-all duration-500"
+                        style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <span className="w-8 text-right text-cyber-cyan">{count}</span>
+                    <span className="w-8 text-right text-zinc-500 text-[10px]">{count}</span>
                   </div>
                 );
               })}
@@ -129,35 +161,35 @@ function ReviewModal({ product, user, onClose }) {
           )}
 
           {loading ? (
-            <div className="text-center text-cyber-gold font-display text-sm">LOADING REVIEWS...</div>
+            <div className="text-center py-8 text-gray-500 font-mono text-xs">Loading holographic review records...</div>
           ) : reviews.length === 0 ? (
-            <div className="text-center py-10 text-gray-500 font-display text-xs">NO REVIEWS YET</div>
+            <div className="text-center py-8 text-gray-500 font-mono text-xs">
+              No transmission reviews logged yet. Be the first to record an impression.
+            </div>
           ) : (
-            reviews.map(review => (
-              <div key={review.id} className="p-4 rounded-2xl bg-black/40 border border-zinc-900 space-y-2">
+            reviews.map((r) => (
+              <div key={r.id} className="p-4 rounded-2xl bg-black/40 border border-zinc-900 space-y-2">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-display font-bold text-cyber-gold">
-                      {review.reviewer?.name?.charAt(0) || '?'}
+                    <div className="w-6 h-6 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs">
+                      {r.reviewer?.avatar || '👤'}
                     </div>
-                    <span className="text-xs font-mono text-white">{review.reviewer?.name}</span>
+                    <span className="text-xs font-bold text-white">{r.reviewer?.name || 'Anonymous Operator'}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <StarRating rating={review.rating} count={0} />
-                    <span className="text-[10px] text-gray-500 font-mono">
-                      {new Date(review.createdAt).toLocaleDateString()}
+                    <span className="text-cyber-gold text-xs">{'★'.repeat(r.rating)}</span>
+                    <span className="text-[10px] font-mono text-zinc-600">
+                      {new Date(r.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
-                {review.comment && (
-                  <p className="text-xs text-gray-400 font-sans leading-relaxed pl-9">{review.comment}</p>
-                )}
-                {review.imageUrl && (
-                  <div className="pl-9 pt-2">
+                {r.comment && <p className="text-xs text-gray-300 font-sans leading-relaxed">{r.comment}</p>}
+                {r.imageUrl && (
+                  <div className="mt-2">
                     <img 
-                      src={review.imageUrl} 
+                      src={r.imageUrl} 
                       alt="Review Attachment" 
-                      className="w-24 h-24 object-cover rounded-xl border border-zinc-900 filter contrast-[1.05]"
+                      className="w-20 h-20 object-cover rounded-xl border border-zinc-800"
                     />
                   </div>
                 )}
@@ -166,17 +198,23 @@ function ReviewModal({ product, user, onClose }) {
           )}
         </div>
 
-        {/* Submit Review */}
+        {/* Add Review Form */}
         {user && (
-          <form onSubmit={handleSubmit} className="p-6 border-t border-zinc-900 space-y-3">
-            <div className="flex items-center gap-4">
-              <label className="text-[10px] font-display text-gray-400 tracking-wider">YOUR RATING:</label>
+          <form onSubmit={handleSubmit} noValidate className="p-4 border-t border-zinc-900 bg-zinc-950/80 space-y-3">
+            {reviewError && (
+              <div className="p-2.5 bg-red-950/50 border border-red-500/50 text-red-400 text-xs rounded-xl font-mono text-center animate-shake">
+                ✕ {reviewError}
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-display text-gray-400 tracking-wider">YOUR VALUATION:</span>
               <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map(n => (
+                {[1, 2, 3, 4, 5].map((star) => (
                   <button
-                    key={n} type="button"
-                    onClick={() => setNewRating(n)}
-                    className={`text-lg transition-colors ${n <= newRating ? 'text-cyber-gold' : 'text-zinc-700'} hover:text-cyber-gold`}
+                    key={star}
+                    type="button"
+                    onClick={() => setNewRating(star)}
+                    className={`text-lg transition-transform hover:scale-125 ${star <= newRating ? 'text-cyber-gold' : 'text-zinc-700'}`}
                   >
                     ★
                   </button>
@@ -185,9 +223,18 @@ function ReviewModal({ product, user, onClose }) {
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <input 
-                type="text" value={newComment} onChange={e => setNewComment(e.target.value)}
-                placeholder="Write your review..."
-                className="flex-1 bg-black/60 border border-zinc-800 focus:border-cyber-gold focus:outline-none rounded-xl p-3 text-sm font-mono placeholder-zinc-700 text-white"
+                type="text" 
+                value={newComment} 
+                onChange={e => {
+                  setNewComment(e.target.value);
+                  if (reviewError && e.target.value.trim().length >= 4) {
+                    setReviewError('');
+                  }
+                }}
+                placeholder="Write your review transmission (min 4 characters)..."
+                className={`flex-1 bg-black/60 border rounded-xl p-3 text-sm font-mono placeholder-zinc-700 text-white ${
+                  reviewError ? 'border-red-500/80' : 'border-zinc-800 focus:border-cyber-gold'
+                } focus:outline-none`}
               />
               
               <div className="flex-1 flex gap-2 items-center bg-black/60 border border-zinc-800 rounded-xl px-3 py-1.5 min-w-[200px]">
@@ -198,6 +245,10 @@ function ReviewModal({ product, user, onClose }) {
                   onChange={(e) => {
                     const file = e.target.files[0];
                     if (file) {
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast.error('Image file size must be less than 5MB.');
+                        return;
+                      }
                       const reader = new FileReader();
                       reader.onloadend = () => {
                         setNewImageUrl(reader.result);
@@ -224,7 +275,7 @@ function ReviewModal({ product, user, onClose }) {
 
               <button 
                 type="submit" disabled={submitting}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 text-black font-display font-bold text-[10px] tracking-widest transition-all active:scale-95 shrink-0"
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 text-black font-display font-bold text-[10px] tracking-widest transition-all active:scale-95 shrink-0 shadow-gold-glow"
               >
                 {submitting ? '...' : 'POST'}
               </button>

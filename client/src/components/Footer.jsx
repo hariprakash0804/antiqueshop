@@ -8,13 +8,29 @@ export function Footer({ setView, activeView }) {
   const [verifyHash, setVerifyHash] = useState('');
   const [verifyResult, setVerifyResult] = useState('');
   const [latency, setLatency] = useState(14);
-  const [testingLatency, setTestingLatency] = useState(false);
+  const [emailError, setEmailError] = useState('');
 
   const handleSubscribe = (e) => {
     e.preventDefault();
-    if (!email) return;
+    setEmailError('');
+    const cleanEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!cleanEmail) {
+      setEmailError('Please provide an email address.');
+      toast.warning('Email address is required for subscription.');
+      return;
+    }
+
+    if (!emailRegex.test(cleanEmail)) {
+      setEmailError('Invalid email format.');
+      toast.error('Please enter a valid email address (e.g. operator@domain.com).');
+      return;
+    }
+
     toast.success('CORE NEWSLETTER REGISTRY SUCCESSFUL. DATA FEED INITIATED.');
     setEmail('');
+    setEmailError('');
   };
 
   const handleVerifySignature = () => {
@@ -97,27 +113,38 @@ export function Footer({ setView, activeView }) {
             </div>
           </div>
 
-          {/* Newsletter subscription */}
-          <div className="space-y-4">
-            <h4 className="text-[10px] font-display tracking-widest text-white font-bold">NEWSLETTER MATRIX</h4>
-            <form onSubmit={handleSubscribe} className="flex gap-2">
-              <input 
-                type="email" required
-                value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="operator@domain.com"
-                className="flex-1 bg-black/60 border border-zinc-800 focus:border-cyber-cyan focus:outline-none rounded-xl px-3 py-2 text-xs font-mono placeholder-zinc-700 text-white"
-              />
-              <button 
-                type="submit"
-                className="px-3 py-2 rounded-xl bg-cyber-cyan hover:bg-cyan-400 text-black font-display font-bold text-[9px] tracking-widest transition-all"
-              >
-                SUB
-              </button>
-            </form>
-            <p className="text-[9px] text-zinc-600 font-mono">
-              Subscribe to secure temporal notifications of incoming artifact streams.
-            </p>
-          </div>
+            {/* Newsletter subscription */}
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-display tracking-widest text-white font-bold">NEWSLETTER MATRIX</h4>
+              <form onSubmit={handleSubscribe} noValidate className="space-y-1">
+                <div className="flex gap-2">
+                  <input 
+                    type="email"
+                    value={email} 
+                    onChange={e => {
+                      setEmail(e.target.value);
+                      if (emailError) setEmailError('');
+                    }}
+                    placeholder="operator@domain.com"
+                    className={`flex-1 bg-black/60 border rounded-xl px-3 py-2 text-xs font-mono placeholder-zinc-700 text-white ${
+                      emailError ? 'border-red-500/80' : 'border-zinc-800 focus:border-cyber-cyan'
+                    } focus:outline-none`}
+                  />
+                  <button 
+                    type="submit"
+                    className="px-3 py-2 rounded-xl bg-cyber-cyan hover:bg-cyan-400 text-black font-display font-bold text-[9px] tracking-widest transition-all shadow-cyan-glow"
+                  >
+                    SUB
+                  </button>
+                </div>
+                {emailError && (
+                  <p className="text-[9px] text-red-400 font-mono">✕ {emailError}</p>
+                )}
+              </form>
+              <p className="text-[9px] text-zinc-600 font-mono">
+                Subscribe to secure temporal notifications of incoming artifact streams.
+              </p>
+            </div>
         </div>
 
         {/* Global systems verification row */}

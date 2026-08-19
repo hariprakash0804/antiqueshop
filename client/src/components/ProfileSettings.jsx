@@ -9,12 +9,22 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
   const [address, setAddress] = useState(user?.address || '');
   const [avatar, setAvatar] = useState(user?.avatar || '🚀');
   const [loading, setLoading] = useState(false);
+  const [profileErrors, setProfileErrors] = useState({});
 
   // Role Request states
   const [roleRequests, setRoleRequests] = useState([]);
   const [requestRole, setRequestRole] = useState('seller');
   const [requestReason, setRequestReason] = useState('');
   const [roleLoading, setRoleLoading] = useState(false);
+  const [roleError, setRoleError] = useState('');
+
+  // Password change states
+  const [showPwChange, setShowPwChange] = useState(false);
+  const [currentPw, setCurrentPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwErrors, setPwErrors] = useState({});
 
   React.useEffect(() => {
     if (user?.role === 'customer') {
@@ -36,54 +46,50 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
     }
   };
 
-  const handleRoleRequestSubmit = async (e) => {
-    e.preventDefault();
-    if (!requestReason.trim() || requestReason.trim().length < 5) {
-      toast.error('A valid justification is required (minimum 5 characters).');
-      return;
-    }
-    setRoleLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/role-request`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`
-        },
-        body: JSON.stringify({ requestedRole: requestRole, reason: requestReason })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        toast.success('Clearance request logged with Admin Overlord.');
-        setRequestReason('');
-        fetchMyRoleRequests();
-      } else {
-        toast.error(data.message || 'Failed to submit clearance request.');
-      }
-    } catch (err) {
-      toast.error('Network connection to auth core lost.');
-    } finally {
-      setRoleLoading(false);
-    }
+  // Password strength calculator
+  const getPasswordStrength = (pw) => {
+    if (!pw) return { label: 'EMPTY', score: 0, color: 'bg-zinc-800' };
+    let score = 0;
+    if (pw.length >= 6) score += 1;
+    if (pw.length >= 10) score += 1;
+    if (/[A-Z]/.test(pw)) score += 1;
+    if (/[0-9]/.test(pw)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pw)) score += 1;
+
+    if (pw.length < 6 || score <= 1) return { label: 'WEAK', score: 1, color: 'bg-red-500 text-red-400' };
+    if (score <= 3) return { label: 'MODERATE', score: 2, color: 'bg-yellow-500 text-yellow-400' };
+    return { label: 'STRONG', score: 3, color: 'bg-green-500 text-green-400' };
   };
 
-  // Password change
-  const [showPwChange, setShowPwChange] = useState(false);
-  const [currentPw, setCurrentPw] = useState('');
-  const [newPw, setNewPw] = useState('');
-  const [confirmPw, setConfirmPw] = useState('');
-  const [pwLoading, setPwLoading] = useState(false);
+  const validateProfile = () => {
+    const errs = {};
+    if (!name.trim()) {
+      errs.name = 'Display name cannot be blank';
+    } else if (name.trim().length < 2) {
+      errs.name = 'Display name must be at least 2 characters';
+    } else if (name.trim().length > 60) {
+      errs.name = 'Display name cannot exceed 60 characters';
+    }
 
-  const AVATAR_PRESETS = [
-    { label: 'Voyager', emoji: '🚀', style: 'border-blue-500/30 hover:border-blue-500 bg-blue-500/10' },
-    { label: 'Hunter', emoji: '💎', style: 'border-emerald-500/30 hover:border-emerald-500 bg-emerald-500/10' },
-    { label: 'Scavenger', emoji: '🏺', style: 'border-amber-500/30 hover:border-amber-500 bg-amber-500/10' },
-    { label: 'Archivist', emoji: '📜', style: 'border-cyber-gold/30 hover:border-cyber-gold bg-cyber-gold/10' },
-    { label: 'AI Overlord', emoji: '🤖', style: 'border-purple-500/30 hover:border-purple-500 bg-purple-500/10' }
-  ];
+    if (phone.trim()) {
+      const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]{7,14}$/;
+      if (!phoneRegex.test(phone.trim())) {
+        errs.phone = 'Please enter a valid phone number format (e.g. +91 9876543210)';
+      }
+    }
+
+    if (address.trim() && address.trim().length < 8) {
+      errs.address = 'Address must be at least 8 characters';
+    }
+
+    setProfileErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
+    if (!validateProfile()) return;
+
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/auth/profile`, {
@@ -92,12 +98,16 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${user.token}`
         },
-        body: JSON.stringify({ name, phone, address, avatar })
+        body: JSON.stringify({ 
+          name: name.trim(), 
+          phone: phone.trim() || null, 
+          address: address.trim() || null, 
+          avatar 
+        })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Update failed');
       
-      // Update local storage with new data
       const updatedUser = { 
         ...user, 
         name: data.name, 
@@ -114,16 +124,33 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
     }
   };
 
+  const validatePasswordChange = () => {
+    const errs = {};
+    if (!currentPw) {
+      errs.currentPw = 'Current password is required';
+    }
+    if (!newPw) {
+      errs.newPw = 'New password is required';
+    } else if (newPw.length < 6) {
+      errs.newPw = 'New password must be at least 6 characters';
+    } else if (newPw === currentPw) {
+      errs.newPw = 'New password must be different from current password';
+    }
+
+    if (!confirmPw) {
+      errs.confirmPw = 'Please confirm your new password';
+    } else if (newPw !== confirmPw) {
+      errs.confirmPw = 'Passwords do not match';
+    }
+
+    setPwErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    if (newPw !== confirmPw) {
-      toast.error('New passwords do not match');
-      return;
-    }
-    if (newPw.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
+    if (!validatePasswordChange()) return;
+
     setPwLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/auth/profile/password`, {
@@ -136,10 +163,17 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Password change failed');
-      toast.success('Password changed successfully');
+      
+      // Update local storage token if server returned fresh session token
+      if (data.token) {
+        onProfileUpdate({ ...user, token: data.token });
+      }
+
+      toast.success('Password changed successfully. Active session refreshed.');
       setCurrentPw('');
       setNewPw('');
       setConfirmPw('');
+      setPwErrors({});
       setShowPwChange(false);
     } catch (err) {
       toast.error(err.message);
@@ -148,7 +182,57 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
     }
   };
 
+  const handleRoleRequestSubmit = async (e) => {
+    e.preventDefault();
+    setRoleError('');
+
+    if (!requestReason.trim() || requestReason.trim().length < 15) {
+      setRoleError('Please provide a detailed justification (minimum 15 characters).');
+      return;
+    }
+    if (requestReason.trim().length > 500) {
+      setRoleError('Justification cannot exceed 500 characters.');
+      return;
+    }
+
+    setRoleLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/role-request`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({ requestedRole: requestRole, reason: requestReason.trim() })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('Clearance request logged with Admin Overlord.');
+        setRequestReason('');
+        setRoleError('');
+        fetchMyRoleRequests();
+      } else {
+        setRoleError(data.message || 'Failed to submit clearance request.');
+        toast.error(data.message || 'Failed to submit clearance request.');
+      }
+    } catch (err) {
+      setRoleError('Network connection to auth core lost.');
+      toast.error('Network connection to auth core lost.');
+    } finally {
+      setRoleLoading(false);
+    }
+  };
+
+  const AVATAR_PRESETS = [
+    { label: 'Voyager', emoji: '🚀', style: 'border-blue-500/30 hover:border-blue-500 bg-blue-500/10' },
+    { label: 'Hunter', emoji: '💎', style: 'border-emerald-500/30 hover:border-emerald-500 bg-emerald-500/10' },
+    { label: 'Scavenger', emoji: '🏺', style: 'border-amber-500/30 hover:border-amber-500 bg-amber-500/10' },
+    { label: 'Archivist', emoji: '📜', style: 'border-cyber-gold/30 hover:border-cyber-gold bg-cyber-gold/10' },
+    { label: 'AI Overlord', emoji: '🤖', style: 'border-purple-500/30 hover:border-purple-500 bg-purple-500/10' }
+  ];
+
   const inputClass = "w-full bg-black/60 border border-zinc-800 focus:border-cyber-gold focus:outline-none rounded-xl p-3 text-sm font-mono placeholder-zinc-700 text-white transition-all";
+  const pwStrength = getPasswordStrength(newPw);
 
   return (
     <div className="max-w-2xl mx-auto py-8 sm:py-12 px-4 sm:px-6 animate-fade-in">
@@ -177,7 +261,7 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
         </div>
 
         {/* Profile Form */}
-        <form onSubmit={handleProfileSave} className="space-y-6">
+        <form onSubmit={handleProfileSave} noValidate className="space-y-6">
           {/* Avatar selector */}
           <div className="space-y-2">
             <label className="block text-[10px] font-display text-gray-400 tracking-wider">HOLOGRAPHIC AVATAR SPEC</label>
@@ -199,11 +283,23 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
           </div>
 
           <div className="space-y-1">
-            <label className="block text-[10px] font-display text-gray-400 tracking-wider">DISPLAY NAME</label>
+            <label className="block text-[10px] font-display text-gray-400 tracking-wider">
+              DISPLAY NAME <span className="text-cyber-gold">*</span>
+            </label>
             <input 
-              type="text" required value={name} onChange={e => setName(e.target.value)}
-              className={inputClass}
+              type="text" 
+              value={name} 
+              onChange={e => {
+                setName(e.target.value);
+                if (profileErrors.name && e.target.value.trim().length >= 2) {
+                  setProfileErrors(prev => ({ ...prev, name: undefined }));
+                }
+              }}
+              className={`${inputClass} ${profileErrors.name ? 'border-red-500/80 bg-red-950/20' : ''}`}
             />
+            {profileErrors.name && (
+              <p className="text-[10px] text-red-400 font-mono">✕ {profileErrors.name}</p>
+            )}
           </div>
 
           <div className="space-y-1">
@@ -212,25 +308,41 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
               type="email" disabled value={user?.email || ''}
               className={`${inputClass} opacity-50 cursor-not-allowed`}
             />
-            <p className="text-[9px] text-zinc-600 font-mono">Email cannot be changed</p>
+            <p className="text-[9px] text-zinc-600 font-mono">Email is locked to primary ledger record</p>
           </div>
 
           <div className="space-y-1">
             <label className="block text-[10px] font-display text-gray-400 tracking-wider">PHONE NUMBER</label>
             <input 
-              type="text" value={phone} onChange={e => setPhone(e.target.value)}
-              placeholder="+91 XXXXXXXXXX"
-              className={inputClass}
+              type="text" 
+              value={phone} 
+              onChange={e => {
+                setPhone(e.target.value);
+                if (profileErrors.phone) setProfileErrors(prev => ({ ...prev, phone: undefined }));
+              }}
+              placeholder="+91 9876543210"
+              className={`${inputClass} ${profileErrors.phone ? 'border-red-500/80 bg-red-950/20' : ''}`}
             />
+            {profileErrors.phone && (
+              <p className="text-[10px] text-red-400 font-mono">✕ {profileErrors.phone}</p>
+            )}
           </div>
 
           <div className="space-y-1">
             <label className="block text-[10px] font-display text-gray-400 tracking-wider">DEFAULT SHIPPING ADDRESS</label>
             <textarea 
-              rows={3} value={address} onChange={e => setAddress(e.target.value)}
+              rows={3} 
+              value={address} 
+              onChange={e => {
+                setAddress(e.target.value);
+                if (profileErrors.address) setProfileErrors(prev => ({ ...prev, address: undefined }));
+              }}
               placeholder="Full address, City, State, PIN"
-              className={inputClass}
+              className={`${inputClass} ${profileErrors.address ? 'border-red-500/80 bg-red-950/20' : ''}`}
             />
+            {profileErrors.address && (
+              <p className="text-[10px] text-red-400 font-mono">✕ {profileErrors.address}</p>
+            )}
           </div>
 
           <button 
@@ -244,42 +356,92 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
         {/* Password Section */}
         <div className="pt-6 border-t border-zinc-900">
           <button 
-            onClick={() => setShowPwChange(!showPwChange)}
+            onClick={() => {
+              setShowPwChange(!showPwChange);
+              setPwErrors({});
+            }}
             className="text-xs font-display tracking-widest text-cyber-cyan hover:text-white transition-colors"
           >
-            {showPwChange ? '▼ HIDE' : '▶ CHANGE'} PASSWORD
+            {showPwChange ? '▼ HIDE' : '▶ CHANGE'} PASSPHRASE
           </button>
 
           {showPwChange && (
-            <form onSubmit={handlePasswordChange} className="mt-4 space-y-4 animate-fade-in">
+            <form onSubmit={handlePasswordChange} noValidate className="mt-4 space-y-4 animate-fade-in">
               <div className="space-y-1">
-                <label className="block text-[10px] font-display text-gray-400 tracking-wider">CURRENT PASSWORD</label>
+                <label className="block text-[10px] font-display text-gray-400 tracking-wider">
+                  CURRENT PASSPHRASE <span className="text-cyber-gold">*</span>
+                </label>
                 <input 
-                  type="password" required value={currentPw} onChange={e => setCurrentPw(e.target.value)}
-                  className={inputClass}
+                  type="password" 
+                  value={currentPw} 
+                  onChange={e => {
+                    setCurrentPw(e.target.value);
+                    if (pwErrors.currentPw) setPwErrors(prev => ({ ...prev, currentPw: undefined }));
+                  }}
+                  className={`${inputClass} ${pwErrors.currentPw ? 'border-red-500/80 bg-red-950/20' : ''}`}
                 />
+                {pwErrors.currentPw && (
+                  <p className="text-[10px] text-red-400 font-mono">✕ {pwErrors.currentPw}</p>
+                )}
               </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-display text-gray-400 tracking-wider">NEW PASSWORD</label>
+                  <label className="block text-[10px] font-display text-gray-400 tracking-wider">
+                    NEW PASSPHRASE <span className="text-cyber-gold">*</span>
+                  </label>
                   <input 
-                    type="password" required value={newPw} onChange={e => setNewPw(e.target.value)}
-                    className={inputClass}
+                    type="password" 
+                    value={newPw} 
+                    onChange={e => {
+                      setNewPw(e.target.value);
+                      if (pwErrors.newPw) setPwErrors(prev => ({ ...prev, newPw: undefined }));
+                    }}
+                    placeholder="Min 6 characters"
+                    className={`${inputClass} ${pwErrors.newPw ? 'border-red-500/80 bg-red-950/20' : ''}`}
                   />
+                  {pwErrors.newPw && (
+                    <p className="text-[10px] text-red-400 font-mono">✕ {pwErrors.newPw}</p>
+                  )}
+                  {newPw.length > 0 && (
+                    <div className="pt-1 space-y-1">
+                      <div className="flex justify-between text-[8px] font-mono">
+                        <span className="text-zinc-500">STRENGTH:</span>
+                        <span className={pwStrength.color.split(' ')[1]}>{pwStrength.label}</span>
+                      </div>
+                      <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden flex gap-1">
+                        <div className={`h-full flex-1 ${pwStrength.score >= 1 ? pwStrength.color.split(' ')[0] : 'bg-zinc-800'}`} />
+                        <div className={`h-full flex-1 ${pwStrength.score >= 2 ? pwStrength.color.split(' ')[0] : 'bg-zinc-800'}`} />
+                        <div className={`h-full flex-1 ${pwStrength.score >= 3 ? pwStrength.color.split(' ')[0] : 'bg-zinc-800'}`} />
+                      </div>
+                    </div>
+                  )}
                 </div>
+
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-display text-gray-400 tracking-wider">CONFIRM NEW PASSWORD</label>
+                  <label className="block text-[10px] font-display text-gray-400 tracking-wider">
+                    CONFIRM NEW PASSPHRASE <span className="text-cyber-gold">*</span>
+                  </label>
                   <input 
-                    type="password" required value={confirmPw} onChange={e => setConfirmPw(e.target.value)}
-                    className={inputClass}
+                    type="password" 
+                    value={confirmPw} 
+                    onChange={e => {
+                      setConfirmPw(e.target.value);
+                      if (pwErrors.confirmPw) setPwErrors(prev => ({ ...prev, confirmPw: undefined }));
+                    }}
+                    className={`${inputClass} ${pwErrors.confirmPw ? 'border-red-500/80 bg-red-950/20' : ''}`}
                   />
+                  {pwErrors.confirmPw && (
+                    <p className="text-[10px] text-red-400 font-mono">✕ {pwErrors.confirmPw}</p>
+                  )}
                 </div>
               </div>
+
               <button 
                 type="submit" disabled={pwLoading}
                 className="w-full py-3 rounded-xl border border-cyber-cyan text-cyber-cyan hover:bg-cyber-cyan/10 font-display font-bold text-xs tracking-widest transition-all"
               >
-                {pwLoading ? 'PROCESSING...' : 'UPDATE PASSWORD'}
+                {pwLoading ? 'PROCESSING...' : 'UPDATE PASSPHRASE'}
               </button>
             </form>
           )}
@@ -310,7 +472,7 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
                 ))}
               </div>
             ) : (
-              <form onSubmit={handleRoleRequestSubmit} className="space-y-4">
+              <form onSubmit={handleRoleRequestSubmit} noValidate className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="block text-[10px] font-display text-gray-400 tracking-wider">TARGET SECURITY LEVEL</label>
@@ -324,17 +486,31 @@ export function ProfileSettings({ user, onProfileUpdate, setView }) {
                     </select>
                   </div>
                 </div>
+
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-display text-gray-400 tracking-wider">UPGRADE JUSTIFICATION / EXPLANATION</label>
+                  <div className="flex justify-between items-center">
+                    <label className="block text-[10px] font-display text-gray-400 tracking-wider">
+                      UPGRADE JUSTIFICATION / EXPLANATION <span className="text-cyber-gold">*</span>
+                    </label>
+                    <span className={`text-[9px] font-mono ${requestReason.length < 15 ? 'text-yellow-500' : 'text-zinc-500'}`}>
+                      {requestReason.length}/500 chars (min 15)
+                    </span>
+                  </div>
                   <textarea
                     rows={3}
                     value={requestReason}
-                    onChange={e => setRequestReason(e.target.value)}
-                    placeholder="Provide your reason or clearance details for upgrading..."
-                    required
-                    className={inputClass}
+                    onChange={e => {
+                      setRequestReason(e.target.value.slice(0, 500));
+                      if (roleError && e.target.value.trim().length >= 15) setRoleError('');
+                    }}
+                    placeholder="Provide your reason or clearance details for upgrading (minimum 15 characters)..."
+                    className={`${inputClass} ${roleError ? 'border-red-500/80 bg-red-950/20' : ''}`}
                   />
+                  {roleError && (
+                    <p className="text-[10px] text-red-400 font-mono">✕ {roleError}</p>
+                  )}
                 </div>
+
                 <button
                   type="submit"
                   disabled={roleLoading}
